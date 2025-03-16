@@ -57,7 +57,7 @@ object SinisterImpl : Sinister {
 				RobotLog.vv(TAG, "notifying that app is alive")
 				AppAliveNotifier.getInstance().notifyAppAlive()
 			}, 0, 5, TimeUnit.SECONDS)
-			val rootFile = DexFile(context.packageCodePath)
+			val rootFile = openDex(File(context.packageCodePath), 5)
 			selfBoot(rootFile)
 			rootFile.close()
 			run = true
@@ -362,11 +362,14 @@ private fun spawnScannerUnload(scanner: Scanner, loader: ClassLoader, classes: I
 	}, executor)
 }
 
-private fun openDex(file: File): DexFile =
+fun openDex(file: File, attempts: Int): DexFile =
 	try {
 		DexFile(file)
 	}
 	catch (e: Throwable) {
-		RobotLog.vv(TAG, "Error occurred while opening dex file $file: $e, trying again")
-		openDex(file)
+		if (attempts > 0) {
+			RobotLog.vv(TAG, "Error occurred while opening dex file $file: $e, trying again. $attempts attempt(s) remaining...")
+			openDex(file, attempts - 1)
+		}
+		else throw e
 	}
