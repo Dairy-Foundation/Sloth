@@ -47,6 +47,11 @@ open class OnBotLoadEventHandlerImpl : LoadEventHandlerInterface, OpModeManagerN
 	override fun handleEventStaging(loadEvent: LoadEvent<*>) {
 		Logger.v(javaClass.simpleName, "Handling staging of load event")
 		synchronized(this) {
+			if (opModeManagerImpl == null) {
+				Logger.v(javaClass.simpleName, "Releasing event from before robot finished starting")
+				loadEvent.release()
+				return
+			}
 			events.add(loadEvent)
 			if (!tryProcess()) Logger.v(javaClass.simpleName, "Storing event for later")
 		}
