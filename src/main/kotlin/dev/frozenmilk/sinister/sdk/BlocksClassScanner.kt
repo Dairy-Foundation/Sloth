@@ -11,8 +11,8 @@ import java.lang.reflect.Method
 
 @Suppress("unused")
 object BlocksClassScanner : Scanner {
-	override val loadAdjacencyRule = afterConfiguration()
-	override val unloadAdjacencyRule = beforeConfiguration()
+	override val loadAdjacencyRule = Scanner.INDEPENDENT
+	override val unloadAdjacencyRule = Scanner.INDEPENDENT
 	override val targets = WideSearch()
 
 	// staticMethodsByClass is used for methods with the ExportToBlocks annotation.

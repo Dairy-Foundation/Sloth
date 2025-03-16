@@ -52,8 +52,8 @@ import java.lang.reflect.Modifier
 object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 	private val TAG = javaClass.simpleName
 
-	override val loadAdjacencyRule = afterConfiguration()
-	override val unloadAdjacencyRule = beforeConfiguration()
+	override val loadAdjacencyRule = Scanner.INDEPENDENT
+	override val unloadAdjacencyRule = Scanner.INDEPENDENT
 
 	private val configurationTypes = mutableMapOf<ClassLoader, MutableList<UserConfigurationType>>()
 	private val mapTagToConfigurationType by MirroredCell<Map<String, ConfigurationType>>(ConfigurationTypeManager.getInstance(), "mapTagToConfigurationType")

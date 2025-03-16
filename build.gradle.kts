@@ -28,7 +28,7 @@ ftc {
 }
 
 dependencies {
-	api("dev.frozenmilk:Sinister:2.1.0")
+	api("dev.frozenmilk:Sinister:2.2.0")
 }
 
 publishing {

@@ -7,10 +7,8 @@ import java.util.function.Consumer
 
 abstract class AppHookScanner<AppHook: Any> : Scanner {
     override val targets: SearchTarget = WideSearch()
-    @Suppress("LeakingThis")
-    override val loadAdjacencyRule = afterConfiguration()
-    @Suppress("LeakingThis")
-    override val unloadAdjacencyRule = beforeConfiguration()
+    override val loadAdjacencyRule = Scanner.INDEPENDENT
+    override val unloadAdjacencyRule = Scanner.INDEPENDENT
 
     private val appHooks = mutableMapOf<ClassLoader, MutableList<AppHook>>()
     private var registrationHelper: RegistrationHelper? = null

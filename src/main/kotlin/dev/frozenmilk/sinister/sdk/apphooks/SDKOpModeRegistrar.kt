@@ -20,8 +20,8 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 // note that the SinisterOpModeRegistrar is better than this, and can do the same stuff
 @Suppress("unused")
 object SDKOpModeRegistrar : Scanner {
-    override val loadAdjacencyRule = afterConfiguration()
-	override val unloadAdjacencyRule = beforeConfiguration()
+    override val loadAdjacencyRule = Scanner.INDEPENDENT
+	override val unloadAdjacencyRule = Scanner.INDEPENDENT
 
     //
     // State

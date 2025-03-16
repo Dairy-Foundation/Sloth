@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.RobotLog
 import com.qualcomm.robotcore.util.ThreadPool
 import dalvik.system.DexFile
 import dev.frozenmilk.sinister.Sinister.Companion.TAG
+import dev.frozenmilk.sinister.configurable.ConfigurableScanner
 import dev.frozenmilk.sinister.loaders.RootClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.LoadEventHandler
@@ -92,10 +93,23 @@ object SinisterImpl : Sinister {
 		// we are going to ignore all non-pinned teamcode classes from here on out
 		val rootClasses = allClasses.filter { it.inheritsAnnotation(Pinned::class.java) || !teamCodeSearch.determineInclusion(it.name) }
 
+		// we're going to pre-run the configuration system
+		try {
+			spawnScannerLoad(ConfigurableScanner, rootLoader, rootClasses.iterator(), ThreadPool.getDefault()).join()
+		}
+		catch (e: Throwable) {
+			RobotLog.ee(
+				TAG,
+				e,
+				"Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+			)
+		}
+
 		val preloaded = preload(rootLoader, rootClasses)
 
 		scanners = preloaded
 			.flatMap { it.staticInstancesOf(Scanner::class.java) }
+			.filter { it != ConfigurableScanner }
 			.onEach { RobotLog.vv(TAG, "found scanner ${it.javaClass.simpleName}") }
 			.toSet()
 
@@ -253,6 +267,18 @@ object SinisterImpl : Sinister {
 			}
 		}
 
+		// we're going to pre-run the configuration system
+		try {
+			spawnScannerLoad(ConfigurableScanner, loader, classes.iterator(), ThreadPool.getDefault()).join()
+		}
+		catch (e: Throwable) {
+			RobotLog.ee(
+				TAG,
+				e,
+				"Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+			)
+		}
+
 		// ensure that we enforce the preloading
 		repeat(preload(loader, classes).count()) { }
 
@@ -277,6 +303,18 @@ object SinisterImpl : Sinister {
 
 		// run scanners
 		scanUnload(loader, classes)
+
+		// we're going to pre-run the configuration system
+		try {
+			spawnScannerLoad(ConfigurableScanner, loader, classes.iterator(), ThreadPool.getDefault()).join()
+		}
+		catch (e: Throwable) {
+			RobotLog.ee(
+				TAG,
+				e,
+				"Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+			)
+		}
 	}
 }
 

@@ -3,19 +3,22 @@ package dev.frozenmilk.sinister.sdk.opmodes
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.Scanner
+import dev.frozenmilk.sinister.sdk.apphooks.SDKOpModeRegistrar
+import dev.frozenmilk.sinister.util.log.Logger
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import java.util.function.Supplier
 
 /**
  * this is a utility class for a Scanner that registers opmodes in some fashion
  * (usually detecting annotations on classes, or calling static methods, etc)
+ *
+ * all scanners that will register an opmode should extend this if possible, with the exemption of
+ * [SDKOpModeRegistrar], which supports legacy sdk systems.
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 abstract class OpModeScanner : Scanner {
-    @Suppress("leakingThis")
-    override val loadAdjacencyRule = afterConfiguration()
-    @Suppress("leakingThis")
-    override val unloadAdjacencyRule = beforeConfiguration()
+    override val loadAdjacencyRule = Scanner.INDEPENDENT
+    override val unloadAdjacencyRule = Scanner.INDEPENDENT
 
     //
     // State

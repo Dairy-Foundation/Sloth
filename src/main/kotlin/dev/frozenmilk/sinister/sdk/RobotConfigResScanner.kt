@@ -26,10 +26,8 @@ open class RobotConfigResScanner(protected val resources: Resources, protected v
     // Scanner
     //
 
-    @Suppress("LeakingThis")
-    override val loadAdjacencyRule = afterConfiguration()
-    @Suppress("LeakingThis")
-    override val unloadAdjacencyRule = beforeConfiguration()
+    override val loadAdjacencyRule = Scanner.INDEPENDENT
+    override val unloadAdjacencyRule = Scanner.INDEPENDENT
     override val targets = WideSearch()
 
     override fun beforeScan(loader: ClassLoader) {
