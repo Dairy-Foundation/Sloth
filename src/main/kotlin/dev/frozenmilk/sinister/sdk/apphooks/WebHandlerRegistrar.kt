@@ -35,7 +35,7 @@ fun interface WebHandlerRegistrar {
 
 	class SDKMethod internal constructor(val method: Method) : WebHandlerRegistrar {
 		override fun webHandlerRegistrar(context: Context, webHandlerManager: WebHandlerManager) {
-			method.invoke(context, webHandlerManager)
+			method.invoke(null, context, webHandlerManager)
 		}
 	}
 
