@@ -2,7 +2,7 @@
 <img src="https://repo.dairy.foundation/api/badge/latest/releases/dev/frozenmilk/sinister/Sloth?color=40c14a&name=Sloth" />
 </a>
 
-Sloth is a Sinister runtime that enables the use of Sinister's classpath scanning and dynamic 
+Sloth is a Sinister runtime that enables the use of Sinister's classpath scanning and dynamic
 loading capabilities on the android FTC platform.
 
 Like fastload, Sloth is built for hot reloading your teamcode, which allows for very fast iteration of code.
@@ -13,7 +13,7 @@ Sloth has some major improvements over fastload:
 3. `@Pinned` can be put on classes to prevent dynamically changing it, or any subclasses of it.
 4. Sloth is built on a more capable runtime, that supports Dairy, and has shims for all of the SDK, meaning that all SDK classpath scanning is performed dynamically.
    - This includes device drivers, like the GoBilda PinPoint that are uploaded alongside a team's code.
-5. Sloth has a drop-in replacement of Dashboard that replaces some internal mechanisms of Dashboard to use Sloth and Sinister equivalents. 
+5. Sloth has a drop-in replacement of Dashboard that replaces some internal mechanisms of Dashboard to use Sloth and Sinister equivalents.
    This fork fully supports dynamic uploading for Configuration and OpModes.
 6. Not hacked onto the OnBotJava system, so doesn't break that
 7. Sloth only processes the change in code when your OpMode ends, which means its safe to run Sloth while running other code
@@ -24,11 +24,15 @@ There are some precautions to take when using Sloth:
    - Installing or changing libraries.
    - Changing files that are not hot reloaded.
    - Changing `@Pinned` on files.
-   Be careful to ensure that you make changes that will be changed, and if make changes that will not, 
+   Be careful to ensure that you make changes that will be changed, and if make changes that will not,
    that you perform a full install in order to propagate them.
 
-NOTE: If the first time you install Sloth something goes wrong, try a second full install, there is a 
+NOTE: If the first time you install Sloth something goes wrong, try a second full install, there is a
 chance that the first install did not have the files on the hub setup correctly.
+
+WARNING: IF YOU HAVE USED THE PEDRO QUICKSTART, PLEASE MOVE YOUR FILES TO THE
+`org.firstinspires.ftc.teamcode` PACKAGE. THE SECOND MOST COMMON ERROR I SEE IS
+USING THE PEDRO QUICKSTART. THEY WILL NOT FIX THIS ISSUE.
 
 # Installation
 
@@ -48,7 +52,7 @@ repositories {
 then add sloth to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.sinister:Sloth:0.1.0")
+    implementation("dev.frozenmilk.sinister:Sloth:0.2.0")
 }
 ```
 
@@ -72,7 +76,7 @@ repositories {
 then add core to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.dairy:Core:2.1.0")
+    implementation("dev.frozenmilk.dairy:Core:2.2.0")
 }
 ```
 
@@ -93,7 +97,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "dev.frozenmilk:Load:0.1.0"
+        classpath "dev.frozenmilk:Load:0.2.0"
     }
 }
 ```
@@ -123,7 +127,7 @@ repositories {
 then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.1.1+0.4.16")
+    implementation("com.acmerobotics.slothboard:dashboard:0.2.0+0.4.16")
 }
 ```
 
@@ -137,7 +141,20 @@ implementation("com.pedropathing:pedro:1.0.8") {
    exclude group: "com.acmerobotics.dashboard"
 }
 ```
-note that pedro requires this.
+```groovy
+implementation("com.acmerobotics.roadrunner:ftc:0.1.20") {
+    exclude group: "com.acmerobotics.dashboard"
+}
+implementation("com.acmerobotics.roadrunner:core:1.0.1") {
+    exclude group: "com.acmerobotics.dashboard"
+}
+implementation("com.acmerobotics.roadrunner:actions:1.0.1") {
+    exclude group: "com.acmerobotics.dashboard"
+}
+```
+note that both pedro and rr require this.
+
+_pedro and rr version numbers may not be up to date._
 
 ## Gradle Tasks
 
