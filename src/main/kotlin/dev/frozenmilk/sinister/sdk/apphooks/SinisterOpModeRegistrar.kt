@@ -29,12 +29,22 @@ fun interface SinisterOpModeRegistrar {
 
 @Suppress("unused")
 object SinisterOpModeRegistrarScanner : OpModeScanner() {
+    private val TAG = javaClass.simpleName
     override val targets = WideSearch()
     override val loadAdjacencyRule = super.loadAdjacencyRule and dependsOn(OnCreateScanner)
     override fun scan(loader: ClassLoader, cls: Class<*>, registrationHelper: RegistrationHelper) {
         cls.staticInstancesOf(SinisterOpModeRegistrar::class.java).forEach {
-            Logger.v(javaClass.simpleName, "running $it")
-            it.registerOpModes(registrationHelper)
+            Logger.v(TAG, "running SinisterOpModeRegistrar hook $it")
+            try {
+                it.registerOpModes(registrationHelper)
+            }
+            catch (e: Throwable) {
+                Logger.e(
+                    TAG,
+                    "something went wrong running SinisterOpModeRegistrar hook $it",
+                    e,
+                )
+            }
         }
     }
 }

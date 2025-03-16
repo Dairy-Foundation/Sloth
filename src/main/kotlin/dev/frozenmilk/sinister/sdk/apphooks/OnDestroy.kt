@@ -1,13 +1,13 @@
 package dev.frozenmilk.sinister.sdk.apphooks
 
 import android.content.Context
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.FalseSingletonSet
 import dev.frozenmilk.sinister.staticInstancesOf
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
@@ -35,6 +35,8 @@ fun interface OnDestroy {
 		override fun onDestroy(context: Context) {
 			method.invoke(null, context)
 		}
+
+		override fun toString() = method.toString()
 	}
 
 	companion object {
@@ -45,6 +47,7 @@ fun interface OnDestroy {
 
 @Suppress("unused")
 object OnDestroyScanner : AppHookScanner<OnDestroy>() {
+	private val TAG = javaClass.simpleName
 	override fun scan(cls: Class<*>, registrationHelper: RegistrationHelper) {
 		cls.staticInstancesOf(OnDestroy::class.java).forEach { registrationHelper.register(it) }
 		cls.declaredMethods
@@ -67,20 +70,41 @@ object OnDestroyScanner : AppHookScanner<OnDestroy>() {
 	@Preload
 	private object CALLSITE {
 		init {
-			RobotLog.dd(javaClass.enclosingClass.simpleName, "Replacing OnDestroy hooks with shim")
+			Logger.v(TAG, "Replacing OnDestroy hooks with shim")
 			javaClass.getDeclaredMethod("onDestroy", Context::class.java).let {
 				AnnotatedHooksClassFilter::class.java.getDeclaredField("onDestroyMethods").apply {
 					isAccessible = true
 				}.set(AnnotatedHooksClassFilter.getInstance(), FalseSingletonSet(it))
 			}
 		}
+
 		@JvmStatic
 		@org.firstinspires.ftc.ftccommon.external.OnDestroy
 		fun onDestroy(context: Context) {
-			val set = mutableSetOf<OnDestroy>()
-			iterateAppHooks(set::add)
-			set.emitGraph { it.adjacencyRule }.sort().forEach {
-				it.onDestroy(context)
+			Logger.v(TAG, "Running Hooks, params: $context")
+			try {
+				val set = mutableSetOf<OnDestroy>()
+				iterateAppHooks(set::add)
+				set.emitGraph { it.adjacencyRule }.sort().forEach {
+					Logger.v(TAG, "running OnDestroy hook $it")
+					try {
+						it.onDestroy(context)
+					}
+					catch (e: Throwable) {
+						Logger.e(
+							TAG,
+							"something went wrong running OnDestroy hook $it",
+							e,
+						)
+					}
+				}
+			}
+			catch (e: Throwable) {
+				Logger.e(
+					TAG,
+					"something went wrong running the OnDestroy hooks",
+					e,
+				)
 			}
 		}
 	}

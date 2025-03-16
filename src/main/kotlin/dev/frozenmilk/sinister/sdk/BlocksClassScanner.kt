@@ -1,9 +1,9 @@
 package dev.frozenmilk.sinister.sdk
 
 import com.qualcomm.robotcore.hardware.HardwareDevice
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.Scanner
 import dev.frozenmilk.sinister.targeting.WideSearch
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.cell.LateInitCell
 import dev.frozenmilk.util.cell.MirroredCell
 import org.firstinspires.ftc.robotcore.internal.opmode.BlocksClassFilter
@@ -29,7 +29,7 @@ object BlocksClassScanner : Scanner {
 	private val enumClassesByEnclosingClassCell = try {
 		MirroredCell<MutableMap<Class<*>, MutableSet<Class<out Enum<*>>>>>(BlocksClassFilter.getInstance(), "enumClassesByEnclosingClass")
 	} catch (_: Throwable) {
-		RobotLog.dd(javaClass.simpleName, "App version < 10.2.0, fallback behaviour enabled safely")
+		Logger.d(javaClass.simpleName, "App version < 10.2.0, fallback behaviour enabled safely")
 		LateInitCell(mutableMapOf())
 	}
 	// enumClassesByEnclosingClass is used for enums with the ExportEnumToBlocks annotation.

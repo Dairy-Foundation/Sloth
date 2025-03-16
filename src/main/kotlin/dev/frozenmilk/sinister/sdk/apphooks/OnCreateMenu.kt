@@ -2,13 +2,13 @@ package dev.frozenmilk.sinister.sdk.apphooks
 
 import android.content.Context
 import android.view.Menu
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.FalseSingletonSet
 import dev.frozenmilk.sinister.staticInstancesOf
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
@@ -36,6 +36,8 @@ fun interface OnCreateMenu {
 		override fun onCreateMenu(context: Context, menu: Menu) {
 			method.invoke(null, context, menu)
 		}
+
+		override fun toString() = method.toString()
 	}
 
 	companion object {
@@ -46,6 +48,7 @@ fun interface OnCreateMenu {
 
 @Suppress("unused")
 object OnCreateMenuScanner : AppHookScanner<OnCreateMenu>() {
+	private val TAG = javaClass.simpleName
 	override fun scan(cls: Class<*>, registrationHelper: RegistrationHelper) {
 		cls.staticInstancesOf(OnCreateMenu::class.java).forEach { registrationHelper.register(it) }
 		cls.declaredMethods
@@ -69,20 +72,41 @@ object OnCreateMenuScanner : AppHookScanner<OnCreateMenu>() {
 	@Preload
 	private object CALLSITE {
 		init {
-			RobotLog.dd(javaClass.enclosingClass.simpleName, "Replacing OnCreateMenu hooks with shim")
+			Logger.d(TAG, "Replacing OnCreateMenu hooks with shim")
 			javaClass.getDeclaredMethod("onCreateMenu", Context::class.java, Menu::class.java).let {
 				AnnotatedHooksClassFilter::class.java.getDeclaredField("onCreateMenuMethods").apply {
 					isAccessible = true
 				}.set(AnnotatedHooksClassFilter.getInstance(), FalseSingletonSet(it))
 			}
 		}
+
 		@JvmStatic
 		@org.firstinspires.ftc.ftccommon.external.OnCreateMenu
 		fun onCreateMenu(context: Context, menu: Menu) {
-			val set = mutableSetOf<OnCreateMenu>()
-			iterateAppHooks(set::add)
-			set.emitGraph { it.adjacencyRule }.sort().forEach {
-				it.onCreateMenu(context, menu)
+			Logger.v(TAG, "Running Hooks, params: $context, $menu")
+			try {
+				val set = mutableSetOf<OnCreateMenu>()
+				iterateAppHooks(set::add)
+				set.emitGraph { it.adjacencyRule }.sort().forEach {
+					Logger.v(TAG, "running OnCreateMenu hook $it")
+					try {
+						it.onCreateMenu(context, menu)
+					}
+					catch (e: Throwable) {
+						Logger.e(
+							TAG,
+							"something went wrong running OnCreateMenu hook $it",
+							e,
+						)
+					}
+				}
+			}
+			catch (e: Throwable) {
+				Logger.e(
+					TAG,
+					"something went wrong running the OnCreateMenu hooks",
+					e,
+				)
 			}
 		}
 	}

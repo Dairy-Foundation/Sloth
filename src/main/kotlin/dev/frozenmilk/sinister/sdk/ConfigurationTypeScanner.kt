@@ -40,7 +40,6 @@ import dev.frozenmilk.sinister.targeting.WideSearch
 import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.cell.MirroredCell
 import org.firstinspires.ftc.robotcore.internal.opmode.OnBotJavaDeterminer
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import org.xmlpull.v1.XmlPullParserException
 import java.io.FileNotFoundException
 import java.lang.reflect.Modifier
@@ -198,7 +197,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 	private fun reportConfigurationError(format: String, vararg args: Any) {
 		val message = String.format(format, *args)
-		RobotLog.ee(ConfigurationTypeManager.TAG, String.format("configuration error: %s", message))
+		Logger.e(ConfigurationTypeManager.TAG, String.format("configuration error: %s", message))
 		RobotLog.setGlobalErrorMsg(message)
 	}
 

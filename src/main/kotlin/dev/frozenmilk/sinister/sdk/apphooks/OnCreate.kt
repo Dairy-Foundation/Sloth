@@ -2,13 +2,13 @@ package dev.frozenmilk.sinister.sdk.apphooks
 
 import android.content.Context
 import com.qualcomm.ftccommon.FtcEventLoop
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.FalseSingletonSet
 import dev.frozenmilk.sinister.staticInstancesOf
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
@@ -41,6 +41,8 @@ fun interface OnCreate {
 		override fun onCreate(context: Context) {
 			method.invoke(null, context)
 		}
+
+		override fun toString() = method.toString()
 	}
 
 	companion object {
@@ -51,6 +53,7 @@ fun interface OnCreate {
 
 @Suppress("unused")
 object OnCreateScanner : AppHookScanner<OnCreate>() {
+	private val TAG = javaClass.simpleName
 	override fun scan(cls: Class<*>, registrationHelper: RegistrationHelper) {
 		cls.staticInstancesOf(OnCreate::class.java).forEach { registrationHelper.register(it) }
 		cls.declaredMethods
@@ -82,24 +85,45 @@ object OnCreateScanner : AppHookScanner<OnCreate>() {
 		private var sdkOverpowered = false
 
 		/**
-		 * not be called except by the sinister runtime
+		 * must not be called except by the sinister runtime
 		 */
 		@JvmStatic
 		fun onCreate(context: Context) {
-			val set = mutableSetOf<OnCreate>()
-			iterateAppHooks(set::add)
-			if (!sdkOverpowered) set.removeIf { it is OnCreate.SDKMethod }
-			set.emitGraph { it.adjacencyRule }.sort().forEach {
-				it.onCreate(context)
+			Logger.v(TAG, "Running Hooks, params: $context")
+			try {
+				val set = mutableSetOf<OnCreate>()
+				iterateAppHooks(set::add)
+				if (!sdkOverpowered) set.removeIf { it is OnCreate.SDKMethod }
+				set.emitGraph { it.adjacencyRule }.sort().forEach {
+					Logger.v(TAG, "running OnCreate hook $it")
+					try {
+						it.onCreate(context)
+					}
+					catch (e: Throwable) {
+						Logger.e(
+							TAG,
+							"something went wrong running OnCreate hook $it",
+							e,
+						)
+					}
+				}
+			}
+			catch (e: Throwable) {
+				Logger.e(
+					TAG,
+					"something went wrong running the OnCreate hooks",
+					e,
+				)
 			}
 		}
 
 		override fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
-			RobotLog.dd(javaClass.enclosingClass.simpleName, "Replacing OnCreate hooks with shim")
+			Logger.v(TAG, "Replacing OnCreate hooks with shim")
 			javaClass.getDeclaredMethod("onCreate", Context::class.java).let {
-				AnnotatedHooksClassFilter::class.java.getDeclaredField("onCreateMethods").apply {
-					isAccessible = true
-				}.set(AnnotatedHooksClassFilter.getInstance(), FalseSingletonSet(it))
+				AnnotatedHooksClassFilter::class.java.getDeclaredField("onCreateMethods")
+					.apply {
+						isAccessible = true
+					}.set(AnnotatedHooksClassFilter.getInstance(), FalseSingletonSet(it))
 			}
 			sdkOverpowered = true
 		}

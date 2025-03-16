@@ -36,9 +36,17 @@ abstract class OpModeScanner : Scanner {
             SinisterRegisteredOpModes.register(meta, supplier)
             metas.add(meta)
         }
+
+        /**
+         * this method can only be used on a class that extends [OpMode]
+         *
+         * use [register] with a supplier instead if you need to do something more complex
+         *
+         * which this calls anyway
+         */
         fun register(meta: OpModeMeta, cls: Class<out OpMode>)  {
             TeleopAutonomousOpModeScanner.checkOpModeClass(cls)?.let {
-                RobotLog.e(it)
+                Logger.e(TeleopAutonomousOpModeScanner.javaClass.simpleName, it)
                 RobotLog.setGlobalErrorMsg(it)
                 return
             }

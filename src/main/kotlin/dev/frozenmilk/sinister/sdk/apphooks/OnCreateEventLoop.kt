@@ -2,13 +2,13 @@ package dev.frozenmilk.sinister.sdk.apphooks
 
 import android.content.Context
 import com.qualcomm.ftccommon.FtcEventLoop
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.FalseSingletonSet
 import dev.frozenmilk.sinister.staticInstancesOf
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
@@ -36,6 +36,8 @@ fun interface OnCreateEventLoop {
 		override fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
 			method.invoke(null, context, ftcEventLoop)
 		}
+
+		override fun toString() = method.toString()
 	}
 
 	companion object {
@@ -46,6 +48,7 @@ fun interface OnCreateEventLoop {
 
 @Suppress("unused")
 object OnCreateEventLoopScanner : AppHookScanner<OnCreateEventLoop>() {
+	private val TAG = javaClass.simpleName
 	override fun scan(cls: Class<*>, registrationHelper: RegistrationHelper) {
 		cls.staticInstancesOf(OnCreateEventLoop::class.java).forEach { registrationHelper.register(it) }
 		cls.declaredMethods
@@ -69,20 +72,40 @@ object OnCreateEventLoopScanner : AppHookScanner<OnCreateEventLoop>() {
 	@Preload
 	private object CALLSITE {
 		init {
-			RobotLog.dd(javaClass.enclosingClass.simpleName, "Replacing OnCreateEventLoop hooks with shim")
+			Logger.v(TAG, "Replacing OnCreateEventLoop hooks with shim")
 			javaClass.getDeclaredMethod("onCreateEventLoop", Context::class.java, FtcEventLoop::class.java).let {
 				AnnotatedHooksClassFilter::class.java.getDeclaredField("onCreateEventLoopMethods").apply {
 					isAccessible = true
 				}.set(AnnotatedHooksClassFilter.getInstance(), FalseSingletonSet(it))
 			}
 		}
+
 		@JvmStatic
 		@org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop
 		fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
-			val set = mutableSetOf<OnCreateEventLoop>()
-			iterateAppHooks(set::add)
-			set.emitGraph { it.adjacencyRule }.sort().forEach {
-				it.onCreateEventLoop(context, ftcEventLoop)
+			Logger.v(TAG, "Running Hooks, params: $context, $ftcEventLoop")
+			try {
+				val set = mutableSetOf<OnCreateEventLoop>()
+				iterateAppHooks(set::add)
+				set.emitGraph { it.adjacencyRule }.sort().forEach {
+					Logger.v(TAG, "running OnCreateEventLoop hook $it")
+					try {
+						it.onCreateEventLoop(context, ftcEventLoop)
+					} catch (e: Throwable) {
+						Logger.e(
+							TAG,
+							"something went wrong running OnCreateEventLoop hook $it",
+							e,
+						)
+					}
+				}
+			}
+			catch (e: Throwable) {
+				Logger.e(
+					TAG,
+					"something went wrong running the OnCreateEventLoop hooks",
+					e,
+				)
 			}
 		}
 	}

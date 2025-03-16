@@ -2,7 +2,6 @@ package dev.frozenmilk.sinister.sdk.opmodes
 
 import com.google.blocks.ftcrobotcontroller.runtime.BlocksOpMode
 import com.google.blocks.ftcrobotcontroller.util.ProjectsUtil
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.util.log.Logger
 import org.firstinspires.ftc.robotcore.internal.files.RecursiveFileObserver
@@ -31,7 +30,7 @@ object BlocksOpModeRegistrar : RecursiveFileObserver.Listener {
                     SinisterRegisteredOpModes.register(it, BlocksOpMode(it.name))
                 }
             } catch (e: Exception) {
-				RobotLog.logStackTrace(e)
+				Logger.e(javaClass.simpleName, "Something went wrong", e)
             }
         }
     }

@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegister
 import com.qualcomm.robotcore.exception.DuplicateNameException
 import com.qualcomm.robotcore.robocol.Command
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.ExternalLibrariesLoader
 import dev.frozenmilk.sinister.OnBotJavaLoader
 import dev.frozenmilk.sinister.loading.Preload
+import dev.frozenmilk.sinister.util.log.Logger
 import org.firstinspires.ftc.robotcore.internal.collections.SimpleGson
 import org.firstinspires.ftc.robotcore.internal.network.NetworkConnectionHandler
 import org.firstinspires.ftc.robotcore.internal.opmode.InstanceOpModeRegistrar
@@ -32,7 +32,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
     init {
         val tag = getInstance().javaClass.getDeclaredField("TAG")
         tag.isAccessible = true
-        RobotLog.vv(tag.get(null)!!.toString(), "replacing RegisteredOpModes instance with dynamically capable shim instance, migrating TAG from \"${tag.get(null)}\" to \"${javaClass.simpleName}\"")
+        Logger.v(tag.get(null)!!.toString(), "replacing RegisteredOpModes instance with dynamically capable shim instance, migrating TAG from \"${tag.get(null)}\" to \"${javaClass.simpleName}\"")
         tag.set(null, TAG)
 
         val instanceHolder = RegisteredOpModes::class.java.declaredClasses.first()
@@ -60,7 +60,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
                         meta,
                         opMode as Class<OpMode>
                     )
-                RobotLog.vv(
+                Logger.v(
                     TAG,
                     "registered {${opMode.simpleName}} as {${meta.name}}"
                 )
@@ -80,7 +80,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
             if (reportIfOpModeAlreadyRegistered(meta)) {
                 opModeInstances[meta.name] =
                     OpModeMetaAndInstance(meta, instance, instanceOpModeRegistrar)
-                RobotLog.vv(
+                Logger.v(
                     TAG,
                     String.format("registered instance as {%s}", meta)
                 )
@@ -98,7 +98,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
         lockOpModesWhile {
             if (reportIfOpModeAlreadyRegistered(meta)) {
                 opModeSuppliers[meta.name] = meta to supplier
-                RobotLog.vv(
+                Logger.v(
                     TAG,
                     String.format("registered supplier as {%s}", meta)
                 )
@@ -134,7 +134,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
 
     fun unregister(name: String) {
         lockOpModesWhile {
-            RobotLog.vv(TAG, "unregistered {${name}}")
+            Logger.v(TAG, "unregistered {${name}}")
             opModeClasses.remove(name)
             opModeInstances.remove(name)
             opModeSuppliers.remove(name)
@@ -161,7 +161,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
             catch (e: Throwable) {
                 when (e) {
                     is InstantiationException, is IllegalAccessException -> {
-                        RobotLog.ee(TAG, "encountered error while attempting to evaluate an opmode with name $opModeName.\n" +
+                        Logger.e(TAG, "encountered error while attempting to evaluate an opmode with name $opModeName.\n" +
                                 "this error has been suppressed and instead null has been returned", e)
                         null
                     }

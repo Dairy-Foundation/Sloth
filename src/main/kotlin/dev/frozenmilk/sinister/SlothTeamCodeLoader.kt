@@ -1,6 +1,5 @@
 package dev.frozenmilk.sinister
 
-import com.qualcomm.robotcore.util.RobotLog
 import dev.frozenmilk.sinister.loaders.SlothClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.Preload
@@ -33,7 +32,7 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
                 SinisterImpl.rootLoader
             )
             Notifier.notify("Staged TeamCode Load")
-            RobotLog.vv(TAG, "Staged TeamCode Load")
+            Logger.v(TAG, "Staged TeamCode Load")
             SinisterImpl.stageLoad(loader, loader.classes) { it
                 .afterCancel {
                     Notifier.notify("Cancelled TeamCode Load")

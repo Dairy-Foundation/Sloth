@@ -13,6 +13,7 @@ import dev.frozenmilk.sinister.sdk.opmodes.OpModeScanner
 import dev.frozenmilk.sinister.sdk.opmodes.SinisterRegisteredOpModes
 import dev.frozenmilk.sinister.sdk.opmodes.TeleopAutonomousOpModeScanner
 import dev.frozenmilk.sinister.targeting.WideSearch
+import dev.frozenmilk.sinister.util.log.Logger
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 
@@ -53,15 +54,14 @@ object SDKOpModeRegistrar : Scanner {
             .forEach {
                 try {
                     if (it.parameterCount == 1) it.invoke(null, registrationHelper!!)
-                    else if (it.parameterCount == 2) it.invoke(null,
-						AppUtil.getDefContext(), registrationHelper!!)
+                    else if (it.parameterCount == 2) it.invoke(null, AppUtil.getDefContext(), registrationHelper!!)
                 }
                 catch (e: Throwable) {
 					RobotLog.setGlobalErrorMsg("something went wrong running a method annotated with @OpModeRegistrar, check the tag \"$TAG\" in the log for more details")
-					RobotLog.ee(
+					Logger.e(
 						TAG,
 						"something went wrong running a method annotated with @OpModeRegistrar",
-						e
+						e,
 					)
                 }
             }
@@ -88,7 +88,7 @@ object SDKOpModeRegistrar : Scanner {
         override fun register(opModeClass: Class<*>) {
             val (meta, error) = TeleopAutonomousOpModeScanner.metaForClass(opModeClass) // no meta extractable, we are going to ignore these errors
             if (error != null) {
-				RobotLog.e("OpMode Configuration Error:\n$error")
+				Logger.e(TAG, "OpMode Configuration Error:\n$error")
 				RobotLog.setGlobalErrorMsg(error)
                 return
             }
@@ -99,12 +99,12 @@ object SDKOpModeRegistrar : Scanner {
 
         override fun register(name: String, opModeClass: Class<out OpMode>) {
             TeleopAutonomousOpModeScanner.checkOpModeClass(opModeClass)?.let {
-                RobotLog.e(it)
+				Logger.e(TAG, it)
 				RobotLog.setGlobalErrorMsg(it)
                 return
             }
             if (!OpModeMeta.nameIsLegalForOpMode(name, false)) {
-				RobotLog.e("\"$name\" is not a legal OpMode name")
+				Logger.e(TAG, "\"$name\" is not a legal OpMode name")
 				RobotLog.setGlobalErrorMsg("\"$name\" is not a legal OpMode name")
                 return
             }
@@ -113,7 +113,7 @@ object SDKOpModeRegistrar : Scanner {
 
         override fun register(name: String, opModeInstance: OpMode) {
             if (!OpModeMeta.nameIsLegalForOpMode(name, false)) {
-				RobotLog.e("\"$name\" is not a legal OpMode name")
+				Logger.e(TAG, "\"$name\" is not a legal OpMode name")
 				RobotLog.setGlobalErrorMsg("\"$name\" is not a legal OpMode name")
                 return
             }

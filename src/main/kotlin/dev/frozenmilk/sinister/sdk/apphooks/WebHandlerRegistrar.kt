@@ -1,7 +1,6 @@
 package dev.frozenmilk.sinister.sdk.apphooks
 
 import android.content.Context
-import com.qualcomm.robotcore.util.RobotLog
 import com.qualcomm.robotcore.util.WebHandlerManager
 import dev.frozenmilk.sinister.sdk.apphooks.WebHandlerRegistrarScanner.CALLSITE.webHandlerRegistrar
 import dev.frozenmilk.sinister.isPublic
@@ -10,6 +9,7 @@ import dev.frozenmilk.sinister.loading.Pinned
 import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.FalseSingletonSet
 import dev.frozenmilk.sinister.staticInstancesOf
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.Graph
 import dev.frozenmilk.util.graph.emitGraph
 import dev.frozenmilk.util.graph.rule.AdjacencyRule
@@ -37,6 +37,8 @@ fun interface WebHandlerRegistrar {
 		override fun webHandlerRegistrar(context: Context, webHandlerManager: WebHandlerManager) {
 			method.invoke(null, context, webHandlerManager)
 		}
+
+		override fun toString() = method.toString()
 	}
 
 	companion object {
@@ -47,6 +49,7 @@ fun interface WebHandlerRegistrar {
 
 @Suppress("unused")
 object WebHandlerRegistrarScanner : AppHookScanner<WebHandlerRegistrar>() {
+	private val TAG = javaClass.simpleName
 	override fun scan(cls: Class<*>, registrationHelper: RegistrationHelper) {
 		cls.staticInstancesOf(WebHandlerRegistrar::class.java).forEach { registrationHelper.register(it) }
 		cls.declaredMethods
@@ -70,7 +73,7 @@ object WebHandlerRegistrarScanner : AppHookScanner<WebHandlerRegistrar>() {
 	@Preload
 	private object CALLSITE {
 		init {
-			RobotLog.dd(javaClass.enclosingClass.simpleName, "Replacing WebHandlerRegistrar hooks with shim")
+			Logger.v(TAG, "Replacing WebHandlerRegistrar hooks with shim")
 			javaClass.getDeclaredMethod("webHandlerRegistrar", Context::class.java, WebHandlerManager::class.java).let {
 				AnnotatedHooksClassFilter::class.java.getDeclaredField("webHandlerRegistrarMethods").apply {
 					isAccessible = true
@@ -81,10 +84,30 @@ object WebHandlerRegistrarScanner : AppHookScanner<WebHandlerRegistrar>() {
 		@JvmStatic
 		@org.firstinspires.ftc.ftccommon.external.WebHandlerRegistrar
 		fun webHandlerRegistrar(context: Context, webHandlerManager: WebHandlerManager) {
-			val set = mutableSetOf<WebHandlerRegistrar>()
-			iterateAppHooks(set::add)
-			set.emitGraph { it.adjacencyRule }.sort().forEach {
-				it.webHandlerRegistrar(context, webHandlerManager)
+			try {
+				Logger.v(TAG, "Running Hooks, params: $context, $webHandlerManager")
+				val set = mutableSetOf<WebHandlerRegistrar>()
+				iterateAppHooks(set::add)
+				set.emitGraph { it.adjacencyRule }.sort().forEach {
+					Logger.v(TAG, "running WebHandlerRegistrar hook $it")
+					try {
+						it.webHandlerRegistrar(context, webHandlerManager)
+					}
+					catch (e: Throwable) {
+						Logger.e(
+							TAG,
+							"something went wrong running WebHandlerRegistrar hook $it",
+							e,
+						)
+					}
+				}
+			}
+			catch (e: Throwable) {
+				Logger.e(
+					TAG,
+					"something went wrong running the WebHandlerRegistrar hooks",
+					e,
+				)
 			}
 		}
 	}
