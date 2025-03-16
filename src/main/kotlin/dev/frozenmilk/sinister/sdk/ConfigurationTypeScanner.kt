@@ -182,15 +182,16 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 	private fun getXmlTag(deviceProperties: DeviceProperties) = ClassUtil.decodeStringRes(deviceProperties.xmlTag.trim())
 
+	private val nameStartChar = "\\p{Alpha}_:"
+	private val nameChar = nameStartChar + "0-9\\-\\."
+	private val xmlRegex = ("^[$nameStartChar][$nameChar]*$").toRegex()
 	private fun isLegalXmlTag(xmlTag: String): Boolean {
 		if (!Util.isGoodString(xmlTag)) return false
 
 		// For simplicity, we only allow a restricted subset of what XML allows
 		//  https://www.w3.org/TR/REC-xml/#NT-NameStartChar
-		val nameStartChar = "\\p{Alpha}_:"
-		val nameChar = nameStartChar + "0-9\\-\\."
 
-		return xmlTag.matches(("^[$nameStartChar][$nameChar]*$").toRegex())
+		return xmlTag.matches(xmlRegex)
 	}
 
 	private fun isHardwareDevice(clazz: Class<*>) = ClassUtil.inheritsFrom(clazz, HardwareDevice::class.java)
