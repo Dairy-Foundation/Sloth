@@ -142,13 +142,7 @@ implementation("com.pedropathing:pedro:1.0.8") {
 }
 ```
 ```groovy
-implementation("com.acmerobotics.roadrunner:ftc:0.1.20") {
-    exclude group: "com.acmerobotics.dashboard"
-}
-implementation("com.acmerobotics.roadrunner:core:1.0.1") {
-    exclude group: "com.acmerobotics.dashboard"
-}
-implementation("com.acmerobotics.roadrunner:actions:1.0.1") {
+implementation("com.acmerobotics.roadrunner:ftc:0.1.21") {
     exclude group: "com.acmerobotics.dashboard"
 }
 ```
