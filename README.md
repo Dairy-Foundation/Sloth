@@ -52,7 +52,7 @@ repositories {
 then add sloth to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.sinister:Sloth:0.2.0")
+    implementation("dev.frozenmilk.sinister:Sloth:0.2.1")
 }
 ```
 
@@ -76,7 +76,7 @@ repositories {
 then add core to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.dairy:Core:2.2.0")
+    implementation("dev.frozenmilk.dairy:Core:2.2.1")
 }
 ```
 
@@ -97,7 +97,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "dev.frozenmilk:Load:0.2.0"
+        classpath "dev.frozenmilk:Load:0.2.1"
     }
 }
 ```
@@ -127,7 +127,7 @@ repositories {
 then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.2.0+0.4.16")
+    implementation("com.acmerobotics.slothboard:dashboard:0.2.1+0.4.16")
 }
 ```
 
