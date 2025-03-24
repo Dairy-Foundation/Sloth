@@ -38,10 +38,12 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
                     Notifier.notify("Cancelled TeamCode Load")
                     Logger.v(TAG, "Cancelled TeamCode Load")
                 }
+                .beforeRelease { Logger.v(TAG, "Processing TeamCode Load") }
                 .afterRelease {
                     Notifier.notify("Processed TeamCode Load")
                     Logger.v(TAG, "Processed TeamCode Load")
                 }
+                .beforeUnload { Logger.v(TAG, "Unloading TeamCode Load") }
                 .afterUnload {
                     Notifier.notify("Unloaded TeamCode Load")
                     Logger.v(TAG, "Unloaded TeamCode Load")
@@ -80,10 +82,12 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
                         Notifier.notify("Cancelled Sloth Load")
                         Logger.v(TAG, "Cancelled Sloth Load")
                     }
+                    .beforeRelease { Logger.v(TAG, "Processing Sloth Load") }
                     .afterRelease {
                         Notifier.notify("Processed Sloth Load")
                         Logger.v(TAG, "Processed Sloth Load")
                     }
+                    .beforeUnload { Logger.v(TAG, "Unloading Sloth Load") }
                     .afterUnload {
                         Notifier.notify("Unloaded Sloth Load")
                         Logger.v(TAG, "Unloaded Sloth Load")
