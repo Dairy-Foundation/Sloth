@@ -262,7 +262,6 @@ object SinisterImpl : Sinister {
 			}
 			catch (e: Throwable) {
 				RobotLog.ee(TAG, "Error occurred while locating class: $e")
-				rootSearch.exclude(it)
 				null
 			}
 		}
@@ -296,7 +295,6 @@ object SinisterImpl : Sinister {
 			}
 			catch (e: Throwable) {
 				RobotLog.ee(TAG, "Error occurred while locating class: $e")
-				rootSearch.exclude(it)
 				null
 			}
 		}
