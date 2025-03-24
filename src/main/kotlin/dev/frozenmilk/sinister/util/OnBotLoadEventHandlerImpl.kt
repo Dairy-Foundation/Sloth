@@ -62,10 +62,11 @@ open class OnBotLoadEventHandlerImpl : LoadEventHandlerInterface, OpModeManagerN
 		tryProcess()
 	}
 
-	override fun onOpModePreStart(opMode: OpMode?) {}
+	override fun onOpModePreStart(opMode: OpMode?) {
+		currentOpMode = opMode
+	}
 
 	override fun onOpModePostStop(opMode: OpMode?) {
 		currentOpMode = opMode
-		tryProcess()
 	}
 }
