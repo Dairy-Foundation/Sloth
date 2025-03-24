@@ -72,7 +72,7 @@ object OnCreateMenuScanner : AppHookScanner<OnCreateMenu>() {
 	@Preload
 	private object CALLSITE {
 		init {
-			Logger.d(TAG, "Replacing OnCreateMenu hooks with shim")
+			Logger.v(TAG, "Replacing OnCreateMenu hooks with shim")
 			javaClass.getDeclaredMethod("onCreateMenu", Context::class.java, Menu::class.java).let {
 				AnnotatedHooksClassFilter::class.java.getDeclaredField("onCreateMenuMethods").apply {
 					isAccessible = true
