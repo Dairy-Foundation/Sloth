@@ -155,6 +155,9 @@ _pedro and rr version numbers may not be up to date._
 
 ## Gradle Tasks
 
+> [!IMPORTANT]
+> In a few steps, you will need to enter something that **will not autocomplete**.
+
 edit configurations:
 
 ![](image/edit_configurations.png)
@@ -167,10 +170,15 @@ select gradle:
 
 ![](image/add_new_gradle_configuration.png)
 
+> [!IMPORTANT]
+> In the next step, it will not autocomplete.
+
 add `deploySloth` and save it:
 
 ![](image/add_deploySloth_task.png)
-NOTE: android studio will not auto complete the names of these tasks, just write it and it will work.
+**NOTE: android studio will not auto complete the names of these tasks, just write it and it will work.**
+> [!NOTE]
+> In case you missed it, it **will not auto complete**.
 
 edit TeamCode configuration:
 
