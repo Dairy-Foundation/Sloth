@@ -6,11 +6,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier
 import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.LoadEventHandlerInterface
+import dev.frozenmilk.sinister.sdk.opmodes.SinisterRegisteredOpModes
 import dev.frozenmilk.sinister.util.log.Logger
+import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
+import org.firstinspires.ftc.robotcore.internal.opmode.RegisteredOpModes.DEFAULT_OP_MODE_METADATA
 
 open class OnBotLoadEventHandlerImpl : LoadEventHandlerInterface, OpModeManagerNotifier.Notifications {
 	@Volatile
-	protected var currentOpMode: OpMode? = null
+	protected var currentMeta: OpModeMeta? = null
 	protected var opModeManagerImpl: OpModeManagerImpl? = null
 	protected val events = mutableListOf<LoadEvent<*>>()
 	protected val processLoadEventName = "\$Process\$Load\$Event\$"
@@ -29,11 +32,12 @@ open class OnBotLoadEventHandlerImpl : LoadEventHandlerInterface, OpModeManagerN
 	}
 
 	private fun canRun() =
-		currentOpMode.let { opMode ->
-			opMode == null || opMode.javaClass == OpModeManagerImpl.DefaultOpMode::class.java
+		currentMeta.let { meta ->
+			meta == null || (meta.name == DEFAULT_OP_MODE_METADATA.name && meta.flavor == DEFAULT_OP_MODE_METADATA.flavor)
 		}
 
 	private fun tryProcess(): Boolean {
+		SinisterRegisteredOpModes.getOpModeMetadata(opModeManagerImpl?.activeOpModeName)?.flavor
 		val res = canRun() && events.isNotEmpty()
 		if (res) {
 			Logger.d(javaClass.simpleName, "Processing Load Events")
@@ -58,15 +62,15 @@ open class OnBotLoadEventHandlerImpl : LoadEventHandlerInterface, OpModeManagerN
 	}
 
 	override fun onOpModePreInit(opMode: OpMode?) {
-		currentOpMode = opMode
+		currentMeta = SinisterRegisteredOpModes.getOpModeMetadata(opModeManagerImpl?.activeOpModeName)
 		tryProcess()
 	}
 
 	override fun onOpModePreStart(opMode: OpMode?) {
-		currentOpMode = opMode
+		currentMeta = SinisterRegisteredOpModes.getOpModeMetadata(opModeManagerImpl?.activeOpModeName)
 	}
 
 	override fun onOpModePostStop(opMode: OpMode?) {
-		currentOpMode = opMode
+		currentMeta = SinisterRegisteredOpModes.getOpModeMetadata(opModeManagerImpl?.activeOpModeName)
 	}
 }

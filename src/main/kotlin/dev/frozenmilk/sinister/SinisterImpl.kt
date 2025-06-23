@@ -32,6 +32,8 @@ object SinisterImpl : Sinister {
 	private val rootSearch = FullSearch()
 	val teamCodeSearch = SearchTarget(SearchTarget.Inclusion.EXCLUDE).apply { include("org.firstinspires.ftc.teamcode") }
 	val rootLoader = RootClassLoader(this.javaClass.classLoader!!)
+	lateinit var ignoredClasses: List<String>
+		private set
 	private lateinit var scanners: Set<Scanner>
 	@Volatile
 	private var run = false
@@ -84,14 +86,20 @@ object SinisterImpl : Sinister {
 				}
 			}
 			catch (e: Throwable) {
-				RobotLog.ee(TAG, "Error occurred while locating class: $e")
+				RobotLog.ee(TAG, "Error occurred while locating class: $e.")
 				rootSearch.exclude(it)
 				null
 			}
 		}.toList()
 
 		// we are going to ignore all non-pinned teamcode classes from here on out
-		val rootClasses = allClasses.filter { it.inheritsAnnotation(Pinned::class.java) || !teamCodeSearch.determineInclusion(it.name) }
+		val rootClasses = mutableListOf<Class<*>>()
+		val teamCodeClasses = mutableListOf<String>()
+		allClasses.forEach {
+			if (it.inheritsAnnotation(Pinned::class.java) || !teamCodeSearch.determineInclusion(it.name)) rootClasses.add(it)
+			else teamCodeClasses.add(it.name)
+		}
+		this.ignoredClasses = teamCodeClasses
 
 		// we're going to pre-run the configuration system
 		try {
@@ -175,7 +183,7 @@ object SinisterImpl : Sinister {
 						CompletableFuture.allOf(*tasks).join()
 					}
 					catch (e: Throwable) {
-						RobotLog.ee(TAG, "Caught and ignored error while running scanner ${it.javaClass.name}:\nError: $e\nStackTrace: ${e.stackTraceToString()}")
+						RobotLog.ee(TAG, e, "Caught and ignored error while running scanner ${it.javaClass.name}.}")
 					}
 				}
 				.clear()
@@ -215,7 +223,7 @@ object SinisterImpl : Sinister {
 						CompletableFuture.allOf(*tasks).get()
 					}
 					catch (e: Throwable) {
-						RobotLog.ee(TAG, "Caught and ignored error while running scanner ${it.javaClass.name}:\nError: $e\nStackTrace: ${e.stackTraceToString()}")
+						RobotLog.ee(TAG, e, "Caught and ignored error while running scanner ${it.javaClass.name}.")
 					}
 				}
 				// clear
@@ -261,7 +269,7 @@ object SinisterImpl : Sinister {
 				}
 			}
 			catch (e: Throwable) {
-				RobotLog.ee(TAG, "Error occurred while locating class: $e")
+				RobotLog.ee(TAG, "Error occurred while locating class: $e.")
 				null
 			}
 		}
@@ -294,7 +302,7 @@ object SinisterImpl : Sinister {
 				}
 			}
 			catch (e: Throwable) {
-				RobotLog.ee(TAG, "Error occurred while locating class: $e")
+				RobotLog.ee(TAG, "Error occurred while locating class: $e.")
 				null
 			}
 		}

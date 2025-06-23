@@ -7,6 +7,7 @@ import dev.frozenmilk.sinister.loading.LoadEventHandler
 import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop
 import dev.frozenmilk.sinister.sdk.apphooks.SinisterOpModeRegistrar
 import dev.frozenmilk.sinister.sdk.opmodes.OpModeScanner
+import dev.frozenmilk.sinister.sdk.opmodes.SinisterRegisteredOpModes
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
 
 @Suppress("unused")
@@ -21,7 +22,8 @@ object OnBotLoadEventHandler : OnBotLoadEventHandlerImpl(), Configuration<LoadEv
 	private object OnCreateEventLoopHook : OnCreateEventLoop {
 		override fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
 			opModeManagerImpl = ftcEventLoop.opModeManager
-			currentOpMode = ftcEventLoop.opModeManager.registerListener(OnBotLoadEventHandler)
+			opModeManagerImpl!!.registerListener(OnBotLoadEventHandler)
+			currentMeta = SinisterRegisteredOpModes.getOpModeMetadata(opModeManagerImpl!!.activeOpModeName)
 		}
 	}
 
