@@ -15,13 +15,15 @@ import dev.frozenmilk.sinister.loading.Preload
 import dev.frozenmilk.sinister.sdk.apphooks.OnCreateScanner
 import dev.frozenmilk.sinister.targeting.FullSearch
 import dev.frozenmilk.sinister.targeting.SearchTarget
+import dev.frozenmilk.sinister.util.log.Logger
 import dev.frozenmilk.util.graph.emitGraph
 import org.firstinspires.ftc.robotcore.internal.system.AppAliveNotifier
-import java.io.File
+import java.io.IOException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
+import java.util.function.Supplier
 
 // NOTE: Sinister uses RobotLog instead of Logger, as it won't have been configured yet,
 // and we know we'll be using it in the end unless the user has uploaded an alternate logging system
@@ -59,7 +61,7 @@ object SinisterImpl : Sinister {
 				RobotLog.vv(TAG, "notifying that app is alive")
 				AppAliveNotifier.getInstance().notifyAppAlive()
 			}, 0, 5, TimeUnit.SECONDS)
-			val rootFile = openDex(File(context.packageCodePath), 5)
+			val rootFile = handleDex { DexFile(context.packageCodePath) }
 			selfBoot(rootFile)
 			rootFile.close()
 			run = true
@@ -368,14 +370,16 @@ private fun spawnScannerUnload(scanner: Scanner, loader: ClassLoader, classes: I
 	}, executor)
 }
 
-fun openDex(file: File, attempts: Int): DexFile =
-	try {
-		DexFile(file)
-	}
-	catch (e: Throwable) {
-		if (attempts > 0) {
-			RobotLog.vv(TAG, "Error occurred while opening dex file $file: $e, trying again. $attempts attempt(s) remaining...")
-			openDex(file, attempts - 1)
+fun <T> handleDex(f: Supplier<T>): T {
+	while (true) {
+		try {
+			return f.get()
+		} catch (e: IOException) {
+			if (e.message != null && e.message!!.startsWith("No original dex files found for dex location")) Logger.v(
+				TAG,
+				"Failed to open DexFile: $e, trying again..."
+			)
+			else throw e
 		}
-		else throw e
 	}
+}

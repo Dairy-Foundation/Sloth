@@ -1,6 +1,7 @@
 package dev.frozenmilk.sinister
 
 import com.qualcomm.robotcore.util.RobotLog
+import dalvik.system.DexFile
 import dev.frozenmilk.sinister.loaders.SlothClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
 import dev.frozenmilk.sinister.loading.Preload
@@ -13,12 +14,12 @@ import java.io.File
 @Preload
 @Suppress("unused")
 object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
-    private val TAG = javaClass.simpleName
-    private val dir = File("${AppUtil.FIRST_FOLDER}/dairy/sloth")
-    private val lock = File("$dir/sloth.lock")
-    private val jarToLoad = File("$dir/to_load.jar")
-    private val loadedJar = File("$dir/loaded.jar")
-    private var loadEvent: LoadEvent<SlothClassLoader>? = null
+	private val TAG = javaClass.simpleName
+	private val dir = File("${AppUtil.FIRST_FOLDER}/dairy/sloth")
+	private val lock = File("$dir/sloth.lock")
+	private val jarToLoad = File("$dir/to_load.jar")
+	private val loadedJar = File("$dir/loaded.jar")
+	private var loadEvent: LoadEvent<SlothClassLoader>? = null
 
 	init {
 		ensureFileHierarchy()
@@ -59,8 +60,8 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
 
 	@Suppress("DEPRECATION")
 	private fun classes() =
-		run {
-			val file = openDex(File(loadedJar.absolutePath), 15)
+		handleDex {
+			val file = DexFile(loadedJar.absolutePath)
 			val res = file.entries().asSequence().filter {
 				SinisterImpl.teamCodeSearch.determineInclusion(it) && SinisterImpl.rootLoader.pinned(
 					it
@@ -82,23 +83,12 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
 				// and will not load pinned classes from itself
 				val classes = classes()
 
-				fun openLoader(attempts: Int): SlothClassLoader =
-					try {
-						SlothClassLoader(
-							loadedJar.absolutePath, "", // TODO
-							SinisterImpl.rootLoader, classes
-						).also { it.loadClass(classes.firstOrNull()) }
-					} catch (e: Throwable) {
-						if (attempts > 0) {
-							RobotLog.vv(
-								TAG,
-								"Error occurred while creating Sloth loader: $e, trying again. $attempts attempt(s) remaining..."
-							)
-							openLoader(attempts - 1)
-						} else throw e
-					}
-
-				val loader = openLoader(15)
+				val loader = handleDex {
+					SlothClassLoader(
+						loadedJar.absolutePath, "", // TODO
+						SinisterImpl.rootLoader, classes
+					).also { it.loadClass(classes.firstOrNull()) }
+				}
 				Notifier.notify("Staged Sloth Load")
 				Logger.v(TAG, "Staged Sloth Load")
 				SinisterImpl.stageLoad(loader, loader.classes) {
