@@ -1,6 +1,6 @@
+@file:Suppress("DEPRECATION")
 package dev.frozenmilk.sinister
 
-import com.qualcomm.robotcore.util.RobotLog
 import dalvik.system.DexFile
 import dev.frozenmilk.sinister.loaders.SlothClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
@@ -58,7 +58,6 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
 		}
 	}
 
-	@Suppress("DEPRECATION")
 	private fun classes() =
 		handleDex {
 			val file = DexFile(loadedJar.absolutePath)
