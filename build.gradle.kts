@@ -1,7 +1,8 @@
 plugins {
 	id("dev.frozenmilk.android-library") version "10.3.0-0.1.4"
-	id("dev.frozenmilk.publish") version "0.0.4"
-	id("dev.frozenmilk.doc") version "0.0.4"
+	id("dev.frozenmilk.publish") version "0.0.5"
+	id("dev.frozenmilk.doc") version "0.0.5"
+	id("dev.frozenmilk.build-meta-data") version "0.0.1"
 }
 
 repositories {
@@ -29,6 +30,16 @@ ftc {
 
 dependencies {
 	api("dev.frozenmilk:Sinister:2.2.0")
+}
+
+meta {
+	packagePath = "dev.frozenmilk.sinister"
+	name = "Sloth"
+	registerField("name", "String", "\"dev.frozenmilk.sinister.Sloth\"")
+	registerField("clean", "Boolean") { "${dairyPublishing.clean}" }
+	registerField("gitRef", "String") { "\"${dairyPublishing.gitRef}\"" }
+	registerField("snapshot", "Boolean") { "${dairyPublishing.snapshot}" }
+	registerField("version", "String") { "\"${dairyPublishing.version}\"" }
 }
 
 publishing {
