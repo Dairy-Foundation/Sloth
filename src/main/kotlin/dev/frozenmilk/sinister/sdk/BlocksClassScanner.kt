@@ -29,7 +29,7 @@ object BlocksClassScanner : Scanner {
 	private val enumClassesByEnclosingClassCell = try {
 		MirroredCell<MutableMap<Class<*>, MutableSet<Class<out Enum<*>>>>>(BlocksClassFilter.getInstance(), "enumClassesByEnclosingClass")
 	} catch (_: Throwable) {
-		Logger.d(javaClass.simpleName, "App version < 10.2.0, fallback behaviour enabled safely")
+		Logger.v(javaClass.simpleName, "SDK version < 10.2.0, fallback behaviour enabled safely")
 		LateInitCell(mutableMapOf())
 	}
 	// enumClassesByEnclosingClass is used for enums with the ExportEnumToBlocks annotation.
