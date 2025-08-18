@@ -1,4 +1,5 @@
 @file:Suppress("Deprecation")
+
 package dev.frozenmilk.sinister.sdk
 
 import android.content.Context
@@ -19,11 +20,13 @@ import com.qualcomm.robotcore.hardware.configuration.I2cSensor
 import com.qualcomm.robotcore.hardware.configuration.MotorType
 import com.qualcomm.robotcore.hardware.configuration.annotations.AnalogSensorType
 import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties
+import com.qualcomm.robotcore.hardware.configuration.annotations.DevicesProperties
 import com.qualcomm.robotcore.hardware.configuration.annotations.DigitalIoDeviceType
 import com.qualcomm.robotcore.hardware.configuration.annotations.ExpansionHubPIDFPositionParams
 import com.qualcomm.robotcore.hardware.configuration.annotations.ExpansionHubPIDFVelocityParams
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType
 import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType
+import com.qualcomm.robotcore.hardware.configuration.annotations.ServoTypes
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.AnalogSensorConfigurationType
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.DigitalIoDeviceConfigurationType
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.I2cDeviceConfigurationType
@@ -55,23 +58,32 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 	override val unloadAdjacencyRule = Scanner.INDEPENDENT
 
 	private val configurationTypes = mutableMapOf<ClassLoader, MutableList<UserConfigurationType>>()
-	private val mapTagToConfigurationType by MirroredCell<Map<String, ConfigurationType>>(ConfigurationTypeManager.getInstance(), "mapTagToConfigurationType")
-	private val displayNamesMap by MirroredCell<Map<ConfigurationType.DeviceFlavor, Map<String, String>>>(ConfigurationTypeManager.getInstance(), "displayNamesMap")
-	private val typeAnnotationsList by MirroredCell<List<Class<*>>>(ConfigurationTypeManager.getInstance(), "typeAnnotationsList")
+	private val mapTagToConfigurationType by MirroredCell<Map<String, ConfigurationType>>(
+		ConfigurationTypeManager.getInstance(), "mapTagToConfigurationType"
+	)
+	private val displayNamesMap by MirroredCell<Map<ConfigurationType.DeviceFlavor, Map<String, String>>>(
+		ConfigurationTypeManager.getInstance(), "displayNamesMap"
+	)
+	private val typeAnnotationsList by MirroredCell<List<Class<*>>>(
+		ConfigurationTypeManager.getInstance(), "typeAnnotationsList"
+	)
 
-	private var resetHardwareMap : Runnable? = null
+	private var resetHardwareMap: Runnable? = null
 
 	override val targets = WideSearch()
 
-	private val clearAll = ConfigurationTypeManager::class.java.getDeclaredMethod("clearAllUserTypes").run {
-		isAccessible = true
-		{
-			invoke(ConfigurationTypeManager.getInstance())
-			Unit
+	private val clearAll =
+		ConfigurationTypeManager::class.java.getDeclaredMethod("clearAllUserTypes").run {
+			isAccessible = true
+			{
+				invoke(ConfigurationTypeManager.getInstance())
+				Unit
+			}
 		}
-	}
 
-	private val add = ConfigurationTypeManager::class.java.getDeclaredMethod("add", UserConfigurationType::class.java).run {
+	private val add = ConfigurationTypeManager::class.java.getDeclaredMethod(
+		"add", UserConfigurationType::class.java
+	).run {
 		isAccessible = true
 		{ deviceType: UserConfigurationType ->
 			invoke(ConfigurationTypeManager.getInstance(), deviceType)
@@ -83,6 +95,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		configurationTypes[loader] = mutableListOf()
 		clearAll()
 	}
+
 	override fun scan(loader: ClassLoader, cls: Class<*>) {
 		// Unlike filterOnBotJavaClass() and filterExternalLibrariesClass(), filterClass() can be
 		// called for a class from any source.
@@ -93,6 +106,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		}
 		scan(loader, cls, source)
 	}
+
 	override fun afterScan(loader: ClassLoader) {
 		reregister()
 	}
@@ -100,6 +114,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 	override fun beforeUnload(loader: ClassLoader) {
 		configurationTypes.remove(loader)
 	}
+
 	override fun unload(loader: ClassLoader, cls: Class<*>) {}
 	override fun afterUnload(loader: ClassLoader) {
 		reregister()
@@ -107,31 +122,33 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 	private fun reregister() {
 		clearAll()
-		configurationTypes
-			.values
-			.forEach { list ->
-				list.forEach {
-					Logger.v(TAG, "registering $it as ${it.name}")
-					add(it)
-				}
+		configurationTypes.values.forEach { list ->
+			list.forEach {
+				Logger.v(TAG, "registering $it as ${it.name}")
+				add(it)
 			}
+		}
 		ConfigurationTypeManager.getInstance().sendUserDeviceTypes()
 		resetHardwareMap?.run()
 	}
 
 	override fun onCreateEventLoop(context: Context, ftcEventLoop: FtcEventLoop) {
-		val eventLoopHandler = FtcEventLoopBase::class.java.getDeclaredField("ftcEventLoopHandler").apply {
-			isAccessible = true
-		}.get(ftcEventLoop)!! as FtcEventLoopHandler
-		val hardwareFactory = FtcEventLoopHandler::class.java.getDeclaredField("hardwareFactory").apply {
-			isAccessible = true
-		}.get(eventLoopHandler)!! as HardwareFactory
-		val hwMapEventLoopHandler = FtcEventLoopHandler::class.java.getDeclaredField("hardwareMap").apply {
-			isAccessible = true
-		}
-		val robotConfigFileManager = FtcEventLoopBase::class.java.getDeclaredField("robotCfgFileMgr").apply {
-			isAccessible = true
-		}.get(ftcEventLoop)!! as RobotConfigFileManager
+		val eventLoopHandler =
+			FtcEventLoopBase::class.java.getDeclaredField("ftcEventLoopHandler").apply {
+				isAccessible = true
+			}.get(ftcEventLoop)!! as FtcEventLoopHandler
+		val hardwareFactory =
+			FtcEventLoopHandler::class.java.getDeclaredField("hardwareFactory").apply {
+				isAccessible = true
+			}.get(eventLoopHandler)!! as HardwareFactory
+		val hwMapEventLoopHandler =
+			FtcEventLoopHandler::class.java.getDeclaredField("hardwareMap").apply {
+				isAccessible = true
+			}
+		val robotConfigFileManager =
+			FtcEventLoopBase::class.java.getDeclaredField("robotCfgFileMgr").apply {
+				isAccessible = true
+			}.get(ftcEventLoop)!! as RobotConfigFileManager
 
 		resetHardwareMap = Runnable {
 			Logger.v(TAG, "Rebuilding HardwareMap...")
@@ -141,7 +158,11 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 			try {
 				hardwareFactory.xmlPullParser = file.xml
 			} catch (e: FileNotFoundException) {
-				Logger.w(TAG, "Unable to set configuration file ${file.name}. Falling back on noConfig.", e)
+				Logger.w(
+					TAG,
+					"Unable to set configuration file ${file.name}. Falling back on noConfig.",
+					e
+				)
 				file = RobotConfigFile.noConfig(robotConfigFileManager)
 				try {
 					hardwareFactory.xmlPullParser = file.xml
@@ -152,7 +173,11 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 					Logger.e(TAG, "Failed to fall back on noConfig", e1)
 				}
 			} catch (e: XmlPullParserException) {
-				Logger.w(TAG, "Unable to set configuration file ${file.name}. Falling back on noConfig.", e)
+				Logger.w(
+					TAG,
+					"Unable to set configuration file ${file.name}. Falling back on noConfig.",
+					e
+				)
 				file = RobotConfigFile.noConfig(robotConfigFileManager)
 				try {
 					hardwareFactory.xmlPullParser = file.xml
@@ -165,11 +190,16 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 			}
 
 			hwMapEventLoopHandler.set(eventLoopHandler, null)
-			ftcEventLoop.opModeManager.hardwareMap = eventLoopHandler.getHardwareMap(ftcEventLoop.opModeManager)
+			ftcEventLoop.opModeManager.hardwareMap =
+				eventLoopHandler.getHardwareMap(ftcEventLoop.opModeManager)
 
 			Logger.d(TAG, "new HardwareMap devices:")
 			ftcEventLoop.opModeManager.hardwareMap.unsafeIterable().forEach {
-				Logger.d(TAG, it.deviceName)
+				Logger.d(
+					TAG, "${
+						ftcEventLoop.opModeManager.hardwareMap.getNamesOf(it).joinToString()
+					}: ${it.deviceName}"
+				)
 			}
 			Logger.d(TAG, "...Finished rebuilding HardwareMap")
 		}
@@ -179,7 +209,8 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 	private fun getXmlTag(i2cSensor: I2cSensor) = ClassUtil.decodeStringRes(i2cSensor.xmlTag.trim())
 
-	private fun getXmlTag(deviceProperties: DeviceProperties) = ClassUtil.decodeStringRes(deviceProperties.xmlTag.trim())
+	private fun getXmlTag(deviceProperties: DeviceProperties) =
+		ClassUtil.decodeStringRes(deviceProperties.xmlTag.trim())
 
 	private val nameStartChar = "\\p{Alpha}_:"
 	private val nameChar = nameStartChar + "0-9\\-\\."
@@ -193,11 +224,12 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		return xmlTag.matches(xmlRegex)
 	}
 
-	private fun isHardwareDevice(clazz: Class<*>) = ClassUtil.inheritsFrom(clazz, HardwareDevice::class.java)
+	private fun isHardwareDevice(clazz: Class<*>) =
+		ClassUtil.inheritsFrom(clazz, HardwareDevice::class.java)
 
 	private fun reportConfigurationError(format: String, vararg args: Any) {
 		val message = String.format(format, *args)
-		Logger.e(ConfigurationTypeManager.TAG, String.format("configuration error: %s", message))
+		Logger.e(TAG, "configuration error: $message")
 		RobotLog.setGlobalErrorMsg(message)
 	}
 
@@ -214,9 +246,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		// Check the XML tag
 		if (!isLegalXmlTag(xmlTag)) {
 			reportConfigurationError(
-				"\"%s\" is not a legal XML tag for the device type \"%s\"",
-				xmlTag,
-				deviceType.name
+				"\"%s\" is not a legal XML tag for the device type \"%s\"", xmlTag, deviceType.name
 			)
 			return false
 		}
@@ -237,8 +267,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 				if (!duplicatingType.annotatedClassIsInstantiable()) {
 					// XML tags for instantiable types can only duplicate other instantiable types
 					reportConfigurationError(
-						"the XML tag \"%s\" is already defined by a non-instantiable type",
-						xmlTag
+						"the XML tag \"%s\" is already defined by a non-instantiable type", xmlTag
 					)
 					return false
 				}
@@ -258,19 +287,18 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 			// For display names, we must never have ambiguity about which XML tag a given display
 			// name corresponds to. Therefore, any already-processed device type that shares this
 			// display name must also have the same XML tag.
-			val tagAssociatedWithDuplicateDisplayName: String? = displayNamesMap[deviceFlavor]?.get(deviceType.name)
+			val tagAssociatedWithDuplicateDisplayName: String? =
+				displayNamesMap[deviceFlavor]?.get(deviceType.name)
 			if (tagAssociatedWithDuplicateDisplayName != null && xmlTag != tagAssociatedWithDuplicateDisplayName) {
 				reportConfigurationError(
-					"the display name \"%s\" is already registered with the XML " +
-						"tag \"%s\", and cannot be registered with the XML tag \"%s\""
+					"the display name \"%s\" is already registered with the XML " + "tag \"%s\", and cannot be registered with the XML tag \"%s\""
 				)
 			}
 		} else {
 			// Non-instantiable device types must have fully unique names and XML tags.
 			if (displayNamesMap[deviceFlavor]?.containsKey(deviceType.name) == true) {
 				reportConfigurationError(
-					"the device type \"%s\" is already defined",
-					deviceType.name
+					"the device type \"%s\" is already defined", deviceType.name
 				)
 				return false
 			}
@@ -300,8 +328,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		// the error and ignore
 		if (!Modifier.isPublic(deviceType.clazz.modifiers)) {
 			reportConfigurationError(
-				"'%s' class is not declared 'public'",
-				deviceType.clazz.simpleName
+				"'%s' class is not declared 'public'", deviceType.clazz.simpleName
 			)
 			return false
 		}
@@ -309,8 +336,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		// Can we instantiate?
 		if (!deviceType.hasConstructors()) {
 			reportConfigurationError(
-				"'%s' class lacks necessary constructor",
-				deviceType.clazz.simpleName
+				"'%s' class lacks necessary constructor", deviceType.clazz.simpleName
 			)
 			return false
 		}
@@ -348,30 +374,26 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		// newType is logical superset of oldType. Thus, there's no reason to ever have an oldType
 		// annotation if you've already got a newType one on the same class. Thus, we prohibit same.
 		// However, you might want to override an inherited value with either.
-		if (!ClassUtil.searchInheritance(clazz
+		if (!ClassUtil.searchInheritance(
+				clazz
 			) {
 				processAnnotationIfPresent(
-					motorConfigurationType,
-					clazz,
-					newType
+					motorConfigurationType, clazz, newType
 				)
 			}
 		) {
-			ClassUtil.searchInheritance(clazz
+			ClassUtil.searchInheritance(
+				clazz
 			) {
 				processAnnotationIfPresent(
-					motorConfigurationType,
-					clazz,
-					oldType
+					motorConfigurationType, clazz, oldType
 				)
 			}
 		}
 	}
 
 	private fun <A : Annotation> processAnnotationIfPresent(
-		motorConfigurationType: MotorConfigurationType,
-		clazz: Class<*>,
-		annotationType: Class<A>
+		motorConfigurationType: MotorConfigurationType, clazz: Class<*>, annotationType: Class<A>
 	): Boolean {
 		val annotation = clazz.getAnnotation(annotationType)
 		if (annotation != null) {
@@ -381,14 +403,15 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		return false
 	}
 
-	private fun getTypeAnnotation(cls: Class<*>) = cls.annotations.firstOrNull { typeAnnotationsList.contains(it.annotationClass.java) }
+	private fun getTypeAnnotation(cls: Class<*>) =
+		cls.annotations.firstOrNull { typeAnnotationsList.contains(it.annotationClass.java) }
 
-	private fun motorTypeFromDeprecatedAnnotation(cls: Class<*>, source: ClassSource): UserConfigurationType? {
+	private fun motorTypeFromDeprecatedAnnotation(
+		cls: Class<*>, source: ClassSource
+	): UserConfigurationType? {
 		val motorTypeAnnotation: MotorType = cls.getAnnotation(MotorType::class.java) ?: return null
 		val motorType = MotorConfigurationType(
-			cls,
-			getXmlTag(motorTypeAnnotation),
-			source
+			cls, getXmlTag(motorTypeAnnotation), source
 		)
 		motorType.processAnnotation(motorTypeAnnotation)
 		processMotorSupportAnnotations(cls, motorType)
@@ -405,12 +428,14 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		// Can't have both old and new local declarations (pick your horse!), but local definitions
 		// override inherited ones
 		processNewOldAnnotations(
-			motorType, clazz,
+			motorType,
+			clazz,
 			ExpansionHubPIDFVelocityParams::class.java,
 			ExpansionHubMotorControllerVelocityParams::class.java
 		)
 		processNewOldAnnotations(
-			motorType, clazz,
+			motorType,
+			clazz,
 			ExpansionHubPIDFPositionParams::class.java,
 			ExpansionHubMotorControllerPositionParams::class.java
 		)
@@ -418,16 +443,13 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 	@Suppress("deprecation")
 	private fun i2cTypeFromDeprecatedAnnotation(
-		cls: Class<*>,
-		source: ClassSource
-	) : UserConfigurationType? {
+		cls: Class<*>, source: ClassSource
+	): UserConfigurationType? {
 		if (!isHardwareDevice(cls)) return null
 		val i2cSensorAnnotation: I2cSensor = cls.getAnnotation(I2cSensor::class.java) ?: return null
-		@Suppress("UNCHECKED_CAST")
-		val sensorType = I2cDeviceConfigurationType(
-			cls as Class<out HardwareDevice>,
-			getXmlTag(i2cSensorAnnotation),
-			source
+
+		@Suppress("UNCHECKED_CAST") val sensorType = I2cDeviceConfigurationType(
+			cls as Class<out HardwareDevice>, getXmlTag(i2cSensorAnnotation), source
 		)
 		sensorType.processAnnotation(i2cSensorAnnotation)
 		sensorType.finishedAnnotations(cls)
@@ -443,23 +465,19 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		source: ClassSource
 	): UserConfigurationType {
 		var configurationType: UserConfigurationType? = null
-		@Suppress("name_shadowing", "UNCHECKED_CAST")
-		val cls = cls as Class<out HardwareDevice>
+
+		@Suppress("name_shadowing", "UNCHECKED_CAST") val cls = cls as Class<out HardwareDevice>
 		when (specificTypeAnnotation) {
 			is ServoType -> {
 				configurationType = ServoConfigurationType(
-					cls,
-					getXmlTag(devicePropertiesAnnotation),
-					source
+					cls, getXmlTag(devicePropertiesAnnotation), source
 				)
 				configurationType.processAnnotation(specificTypeAnnotation)
 			}
 
 			is com.qualcomm.robotcore.hardware.configuration.annotations.MotorType -> {
 				configurationType = MotorConfigurationType(
-					cls,
-					getXmlTag(devicePropertiesAnnotation),
-					source
+					cls, getXmlTag(devicePropertiesAnnotation), source
 				)
 				processMotorSupportAnnotations(cls, configurationType)
 				configurationType.processAnnotation(specificTypeAnnotation)
@@ -467,31 +485,30 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 			is AnalogSensorType -> {
 				configurationType = AnalogSensorConfigurationType(
-					cls,
-					getXmlTag(devicePropertiesAnnotation),
-					source
+					cls, getXmlTag(devicePropertiesAnnotation), source
 				)
 			}
 
 			is DigitalIoDeviceType -> {
 				configurationType = DigitalIoDeviceConfigurationType(
-					cls,
-					getXmlTag(devicePropertiesAnnotation),
-					source
+					cls, getXmlTag(devicePropertiesAnnotation), source
 				)
 			}
 
 			is I2cDeviceType -> {
 				configurationType = I2cDeviceConfigurationType(
-					cls,
-					getXmlTag(devicePropertiesAnnotation),
-					source
+					cls, getXmlTag(devicePropertiesAnnotation), source
 				)
 			}
 		}
 		return configurationType!!
 	}
 
+	/**
+	 * we start guessing that it is available, and we'll turn this off if it isn't
+	 */
+	@Suppress("ObjectPrivatePropertyName")
+	private var `SDK-10-3-0-AVAILABLE` = true
 	private fun scan(loader: ClassLoader, cls: Class<*>, source: ClassSource) {
 		motorTypeFromDeprecatedAnnotation(cls, source)?.let {
 			configurationTypes[loader]!!.add(it)
@@ -504,21 +521,63 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 
 		val specificTypeAnnotation = getTypeAnnotation(cls) ?: return
 
+		if (`SDK-10-3-0-AVAILABLE`) {
+			try {
+				// NOTE: this is made into a lambda in order to make it a separate class
+				@Suppress("LocalVariableName")
+				val `SDK-10-3-0` = Outer@{
+					cls.getAnnotation(DevicesProperties::class.java)?.let { devicesProperties ->
+						if (specificTypeAnnotation is ServoTypes) devicesProperties.value.forEach { deviceProperties ->
+							val xmlTag = getXmlTag(deviceProperties)
+							val servoType =
+								specificTypeAnnotation.value.firstOrNull { it.xmlTag == xmlTag } ?: run {
+									Logger.e(
+										TAG,
+										"Could not find paired @ServoType annotation for repeated annotation type with tag: $xmlTag"
+									)
+									return@Outer true
+								}
+							addConfigurationType(servoType, deviceProperties, cls, source, loader)
+							return@Outer true
+						}
+						else {
+							Logger.e(TAG, "Unsupported repeated annotation type: $specificTypeAnnotation")
+							return@Outer true
+						}
+					}
+					return@Outer false
+				}
+				if (`SDK-10-3-0`()) return
+			}
+			catch (e: ClassNotFoundException) {
+				`SDK-10-3-0-AVAILABLE` = false
+				Logger.v(TAG, "SDK version < 10.3.0, fallback behaviour enabled safely")
+			}
+			catch (e: NoClassDefFoundError) {
+				`SDK-10-3-0-AVAILABLE` = false
+				Logger.v(TAG, "SDK version < 10.3.0, fallback behaviour enabled safely")
+			}
+		}
+
 		val devicePropertiesAnnotation = cls.getAnnotation(DeviceProperties::class.java) ?: run {
 			reportConfigurationError("Class ${cls.simpleName} annotated with $specificTypeAnnotation is missing @DeviceProperties annotation.")
 			return
 		}
 
-		//UserConfigurationType
-		val configurationType = createAppropriateConfigurationType(specificTypeAnnotation, devicePropertiesAnnotation, cls, source)
+		addConfigurationType(specificTypeAnnotation, devicePropertiesAnnotation, cls, source, loader)
+	}
+
+	private fun addConfigurationType(specificTypeAnnotation: Annotation, devicePropertiesAnnotation: DeviceProperties, cls: Class<*>, source: ClassSource, loader: ClassLoader) {
+		val configurationType = createAppropriateConfigurationType(
+			specificTypeAnnotation, devicePropertiesAnnotation, cls, source
+		)
 		configurationType.processAnnotation(devicePropertiesAnnotation)
 		configurationType.finishedAnnotations(cls)
 		if (configurationType.annotatedClassIsInstantiable()) {
 			if (checkInstantiableTypeConstraints(configurationType as InstantiableUserConfigurationType)) {
 				configurationTypes[loader]!!.add(configurationType)
 			}
-		}
-		else {
+		} else {
 			if (checkAnnotationParameterConstraints(configurationType)) {
 				configurationTypes[loader]!!.add(configurationType)
 			}
