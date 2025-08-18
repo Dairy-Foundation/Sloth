@@ -127,7 +127,7 @@ repositories {
 then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.2.4+0.4.16")
+    implementation("com.acmerobotics.slothboard:dashboard:0.2.4+0.4.17")
 }
 ```
 
