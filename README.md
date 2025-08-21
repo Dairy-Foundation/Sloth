@@ -2,21 +2,37 @@
 <img src="https://repo.dairy.foundation/api/badge/latest/releases/dev/frozenmilk/sinister/Sloth?color=40c14a&name=Sloth" />
 </a>
 
-Sloth is a Sinister runtime that enables the use of Sinister's classpath scanning and dynamic
-loading capabilities on the android FTC platform.
+Sloth is the fastest hot code reload library for FTC.
 
-Like fastload, Sloth is built for hot reloading your teamcode, which allows for very fast iteration of code.
+Hot reloading involves sending just your teamcode to the robot when you make a
+change to get VERY fast write -> run -> test development cycles. Say good bye to
+waiting 40 seconds + for your teamcode to be uploaded, Sloth gets code on your
+robot in under a second.
 
-Sloth has some major improvements over fastload:
-1. Sloth is much faster than fastload. fastload advertises ~7 seconds upload time, Sloth should be 2 seconds or less.
+Sloth is also Sinister runtime that enables the use of Sinister's classpath
+scanning and dynamic loading capabilities on the android FTC platform. This
+allows Sloth to support a wide range of libraries that need to know about and
+react to hot reloading your code.
+
+Sloth has some major improvements over its predecessor, [fastload](https://github.com/MatthewOates36/fast-load):
+1. Sloth is much faster than fastload. fastload advertises ~7 seconds upload time, Sloth has a upper ceiling of 2 seconds, but often is less than 1.
 2. Sloth will keep changes across restarts and power cycles of the robot.
 3. `@Pinned` can be put on classes to prevent dynamically changing it, or any subclasses of it.
-4. Sloth is built on a more capable runtime, that supports Dairy, and has shims for all of the SDK, meaning that all SDK classpath scanning is performed dynamically.
-   - This includes device drivers, like the GoBilda PinPoint that are uploaded alongside a team's code.
+4. Sloth is a more capable runtime, that does more than just swap over your code:
+    - Sloth sets up Dairy.
+    - Updates parts of the SDK properly when you upload code changes, including
+      your hardwaremap if you're uploading drivers with your teamcode. (like the
+      gobilda pinpoint driver before it was part of the sdk).
+    - Libraries that rely on looking at your code, like dashboard, can be easily
+      tweaked to be compatible with Sloth, and thus load faster, and support
+      hotreloading. (please open an issue if you have a favourite library that
+      is currently incompatible with Sloth, I don't mind maintaining a fork, or
+      doing the setup work to make it easy for others to maintain.)
+    - Sloth supports custom user classpath scanning, so you can write your own
+      systems that listen and react to hot reloads.
 5. Sloth has a drop-in replacement of Dashboard that replaces some internal mechanisms of Dashboard to use Sloth and Sinister equivalents.
-   This fork fully supports dynamic uploading for Configuration and OpModes.
-6. Not hacked onto the OnBotJava system, so doesn't break that
-7. Sloth only processes the change in code when your OpMode ends, which means its safe to run Sloth while running other code
+   This fork fully supports hot reloading for Configuration (`@Config`) and OpModes.
+6. Sloth only processes the change in code when your OpMode ends, which means its safe to deploy with Sloth while running other code.
 
 There are some precautions to take when using Sloth:
 1. Sloth will only dynamically hot reload classes in the `org.firsinspires.ftc.teamcode` package, and subpackages.
@@ -27,9 +43,6 @@ There are some precautions to take when using Sloth:
    Be careful to ensure that you make changes that will be changed, and if make changes that will not,
    that you perform a full install in order to propagate them.
 
-NOTE: If the first time you install Sloth something goes wrong, try a second full install, there is a
-chance that the first install did not have the files on the hub setup correctly.
-
 WARNING: IF YOU HAVE USED THE PEDRO QUICKSTART, PLEASE MOVE YOUR FILES TO THE
 `org.firstinspires.ftc.teamcode` PACKAGE. THE SECOND MOST COMMON ERROR I SEE IS
 USING THE PEDRO QUICKSTART. THEY WILL NOT FIX THIS ISSUE.
@@ -39,6 +52,7 @@ USING THE PEDRO QUICKSTART. THEY WILL NOT FIX THIS ISSUE.
 NOTE: if you are using Dairy, skip to the Dairy Core Heading
 
 NOTE: if you are using Dashboard, check out the Dashboard heading.
+
 ## Sloth Library
 add the dairy releases repository to your `TeamCode` `build.gradle`, above the `dependencies` block
 ```groovy
