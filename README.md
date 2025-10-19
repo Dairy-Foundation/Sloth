@@ -74,7 +74,10 @@ repositories {
 }
 ```
 
-## Sloth Library (if you are NOT using other Dairy libraries)
+## Install Sloth
+This is a bit different depending on whether you are using other Dairy libraries or not:
+
+### Sloth Library (if you are NOT using other Dairy libraries)
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
@@ -84,7 +87,7 @@ dependencies {
 
 Now [install the Load plugin](#load-plugin).
 
-## Dairy Core (if you ARE using other Dairy libraries)
+### Dairy Core (if you ARE using other Dairy libraries)
 To use this release of Sloth with Dairy you need to install a snapshot version of Dairy's Core.
 
 Add core to the `dependencies` block:
