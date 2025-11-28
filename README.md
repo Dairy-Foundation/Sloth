@@ -56,23 +56,29 @@ There are some precautions to take when using Sloth:
 
 # Installation
 
-> [!IMPORTANT]
-> If you are already using Dairy, skip straight to the [Dairy Core](#dairy-core) section.
-
 > [!NOTE]
 > If you are using FTC Dashboard, check out the [FTC Dashboard](#ftc-dashboard) section.
 
-## Sloth Library
-Add the dairy releases repository to your `TeamCode` `build.gradle`, above the `dependencies` block:
+## Dairy Repositories
+Add the dairy repositories to your `TeamCode` `build.gradle`, above the `dependencies` block:
 ```groovy
 repositories {
+    // Dairy releases repository
     maven {
         url = "https://repo.dairy.foundation/releases"
+    }
+    // Dairy snapshots repository
+    maven {
+        url = "https://repo.dairy.foundation/snapshots"
     }
 }
 ```
 
-Then add sloth to the `dependencies` block:
+## Install Sloth
+This is a bit different depending on whether you are using other Dairy libraries or not:
+
+### Sloth Library (if you are NOT using other Dairy libraries)
+Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
     implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
@@ -81,22 +87,10 @@ dependencies {
 
 Now [install the Load plugin](#load-plugin).
 
-## Dairy Core
+### Dairy Core (if you ARE using other Dairy libraries)
 To use this release of Sloth with Dairy you need to install a snapshot version of Dairy's Core.
 
-Add the Dairy releases and snapshots repository to your `TeamCode` `build.gradle`, above the `dependencies` block:
-```groovy
-repositories {
-    maven {
-        url = "https://repo.dairy.foundation/releases"
-    }
-    maven {
-        url = "https://repo.dairy.foundation/snapshots"
-    }
-}
-```
-
-Then add core to the `dependencies` block:
+Add core to the `dependencies` block:
 ```groovy
 dependencies {
     implementation("dev.frozenmilk.dairy:Core:2.2.4")
@@ -162,21 +156,15 @@ dependencies {
 
 Change the `implementation` like so:
 ```groovy
-implementation("com.pedropathing:pedro:1.0.8") {
-   exclude group: "com.acmerobotics.dashboard"
-}
-```
-```groovy
-implementation("com.acmerobotics.roadrunner:ftc:0.1.21") {
+implementation("com.acmerobotics.roadrunner:ftc:0.1.25") {
    exclude group: "com.acmerobotics.dashboard"
 }
 implementation ("com.acmerobotics.roadrunner:actions:1.0.1"){
    exclude group: "com.acmerobotics.dashboard"
 }
 ```
-Note that both Pedro Pathing and Road Runner require this.
 
-_Pedro Pathing and Road Runner version numbers may not be up to date; they are provided only as an example._
+_Road Runner version numbers may not be up to date; they are provided only as an example._
 
 ## Gradle Tasks
 
