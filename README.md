@@ -87,7 +87,7 @@ dependencies {
 
 Now [install the Load plugin](#load-plugin).
 
-### Dairy Core (if you ARE using other Dairy libraries)
+### Dairy Core (if you ARE using other 1.x.x Dairy libraries)
 To use this release of Sloth with Dairy you need to install a snapshot version of Dairy's Core.
 
 Add core to the `dependencies` block:
