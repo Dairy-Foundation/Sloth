@@ -59,6 +59,49 @@ There are some precautions to take when using Sloth:
 > [!NOTE]
 > If you are using FTC Dashboard, check out the [FTC Dashboard](#ftc-dashboard) section.
 
+> [!NOTE]
+> If you're interested in an easier way to manage your ftc gradle build and
+> dependencies, check out [Dairy Templates](#dairy-templates), which have a
+> template for using Sloth with all the work done for you.
+
+## Dairy Templates
+Learn more about Dairy's gradle plugins and project templates
+[here](https://github.com/Dairy-Foundation/Templates/)
+
+If you're using the [Dairy gradle
+plugins](https://github.com/Dairy-Foundation/Plugins) this process is well
+supported:
+
+you can find an example
+[here](https://github.com/Dairy-Foundation/Templates/tree/teamcode-sloth).
+
+```kts
+ftc {
+    dairy {
+        implementation(Sloth)
+        // if you want slothboard too
+        implementation(slothboard)
+    }
+}
+```
+You do not need to worry about excluding dashboard from roadrunner, it has
+already been done.
+
+You do not need to add the repositories either.
+
+You do need to install the Load plugin:
+
+```kts
+plugins {
+    // you should already have this line
+    id("dev.frozenmilk.teamcode") version "11.0.0-1.0.0"
+    // add this line
+    id("dev.frozenmilk.sinister.sloth.load") version "0.2.4"
+}
+```
+
+Then follow the steps to set up the gradle tasks.
+
 ## Dairy Repositories
 Add the dairy repositories to your `TeamCode` `build.gradle`, above the `dependencies` block:
 ```groovy
@@ -77,7 +120,7 @@ repositories {
 ## Install Sloth
 This is a bit different depending on whether you are using other Dairy libraries or not:
 
-### Sloth Library (if you are NOT using other Dairy libraries)
+### Sloth Library (if you ARE NOT using other Dairy 1.x.x libraries)
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
@@ -145,7 +188,7 @@ repositories {
 Then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.2.4+0.4.17")
+    implementation("com.acmerobotics.slothboard:dashboard:0.2.4+0.5.1")
 }
 ```
 
