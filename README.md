@@ -81,6 +81,8 @@ ftc {
         implementation(Sloth)
         // if you want slothboard too
         implementation(slothboard)
+        // if you want panels too
+        implementation(ftControl.fullpanels)
     }
 }
 ```
@@ -94,7 +96,7 @@ You do need to install the Load plugin:
 ```kts
 plugins {
     // you should already have this line
-    id("dev.frozenmilk.teamcode") version "11.0.0-1.0.0"
+    id("dev.frozenmilk.teamcode") version "11.0.0-1.1.0"
     // add this line
     id("dev.frozenmilk.sinister.sloth.load") version "0.2.4"
 }
