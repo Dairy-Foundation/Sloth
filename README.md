@@ -209,6 +209,35 @@ implementation ("com.acmerobotics.roadrunner:actions:1.0.1"){
 
 _Road Runner version numbers may not be up to date; they are provided only as an example._
 
+## Panels
+Add the dairy releases repository to your `TeamCode` `build.gradle`, above the `dependencies` block (if you already have it, no need to do so again)
+```groovy
+repositories {
+    maven {
+        url = "https://repo.dairy.foundation/releases"
+    }
+}
+```
+
+Then add panels to the `dependencies` block:
+```groovy
+dependencies {
+    implementation("com.bylazar.sloth:fullpanels:0.2.4+1.0.12")
+}
+```
+
+> [!NOTE]
+> You can also add all the panels dependencies one-by-one if you want to be
+> selective, which works the same way: `com.bylazar` -> `com.bylazar.sloth` and
+> `<version>` -> `0.2.4+<version>`, you can see all the details at the
+> [dairy repository](https://repo.dairy.foundation/#/releases/com/bylazar/sloth)
+
+> [!NOTE]
+> If you use a library that imports dashboard via a `implementation` or `api`
+> dependency, ask the library maintainers to consider changing it to
+> `compileOnly`.  This will allow it to work with the modified version of Panels
+> that Sloth uses.
+
 ## Gradle Tasks
 
 Edit configurations:
