@@ -6,10 +6,12 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import org.gradle.process.internal.ExecException
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
-abstract class RemoveRemoteSloth : DefaultTask() {
+abstract class RemoveRemoteSloth @Inject constructor (private var execOperations: ExecOperations): DefaultTask() {
 	@InputFile
 	abstract fun getAdbExecutable(): RegularFileProperty
 
@@ -19,7 +21,7 @@ abstract class RemoveRemoteSloth : DefaultTask() {
 	@TaskAction
 	fun execute() {
 		val stdErr = ByteArrayOutputStream()
-		project.exec {
+		execOperations.exec {
 			it.commandLine(
 				getAdbExecutable().get().asFile.absolutePath,
 				"shell",
