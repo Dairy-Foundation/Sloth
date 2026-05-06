@@ -8,13 +8,15 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import org.gradle.process.internal.ExecException
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
 /**
  * Uses ADB to copy the merged dex jar to the robot controller.
  */
-abstract class DeploySloth : DefaultTask() {
+abstract class DeploySloth @Inject constructor(private var execOperations: ExecOperations) : DefaultTask() {
 	@InputDirectory
 	abstract fun getOutputDir(): DirectoryProperty
 
@@ -30,7 +32,7 @@ abstract class DeploySloth : DefaultTask() {
 	@TaskAction
 	fun execute() {
 		var stdErr = ByteArrayOutputStream()
-		project.exec {
+		execOperations.exec {
 			it.commandLine(
 				getAdbExecutable().get().asFile.absolutePath,
 				"shell",
@@ -51,7 +53,7 @@ abstract class DeploySloth : DefaultTask() {
 		println("checked for lock file")
 
 		stdErr = ByteArrayOutputStream()
-		project.exec {
+		execOperations.exec {
 			it.commandLine(
 				getAdbExecutable().get().asFile.absolutePath,
 				"push",
@@ -69,7 +71,7 @@ abstract class DeploySloth : DefaultTask() {
 		println("waiting for lock file to be removed")
 		while (true) {
 			stdErr = ByteArrayOutputStream()
-			val finished = project.exec {
+			val finished = execOperations.exec {
 				it.commandLine(
 					getAdbExecutable().get().asFile.absolutePath,
 					"shell",
