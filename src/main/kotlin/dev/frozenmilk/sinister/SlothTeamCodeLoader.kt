@@ -86,7 +86,9 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
 					SlothClassLoader(
 						loadedJar.absolutePath, "", // TODO
 						SinisterImpl.rootLoader, classes
-					).also { it.loadClass(classes.firstOrNull()) }
+					).also {
+						if (classes.isNotEmpty()) it.loadClass(classes.first())
+					}
 				}
 				Notifier.notify("Staged Sloth Load")
 				Logger.v(TAG, "Staged Sloth Load")
