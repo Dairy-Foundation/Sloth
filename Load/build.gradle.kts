@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.24")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
     //noinspection AndroidGradlePluginVersion
-    compileOnly("com.android.tools.build:gradle:8.7.0")
+    compileOnly("com.android.tools.build:gradle:8.13.2")
 }
 
 dairyPublishing {

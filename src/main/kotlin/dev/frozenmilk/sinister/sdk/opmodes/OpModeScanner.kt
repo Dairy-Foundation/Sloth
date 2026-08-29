@@ -45,8 +45,8 @@ abstract class OpModeScanner : Scanner {
          * which this calls anyway
          */
         fun register(meta: OpModeMeta, cls: Class<out OpMode>)  {
-            TeleopAutonomousOpModeScanner.checkOpModeClass(cls)?.let {
-                Logger.e(TeleopAutonomousOpModeScanner.javaClass.simpleName, it)
+            AnnotatedOpModeScanner.checkOpModeClass(cls)?.let {
+                Logger.e(AnnotatedOpModeScanner.javaClass.simpleName, it)
                 RobotLog.setGlobalErrorMsg(it)
                 return
             }

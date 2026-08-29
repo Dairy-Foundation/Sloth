@@ -1,6 +1,7 @@
 package dev.frozenmilk.sinister.sloth
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -9,7 +10,6 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
-import org.gradle.process.internal.ExecException
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -36,13 +36,13 @@ abstract class DeploySloth @Inject constructor(private var execOperations: ExecO
 			it.commandLine(
 				getAdbExecutable().get().asFile.absolutePath,
 				"shell",
-				"test ! -f ${getDeployLocation().get()}/lock",
+				"test ! -f ${getDeployLocation().get()}/sloth.lock",
 			)
 			it.isIgnoreExitValue = true
 			it.errorOutput = stdErr
 		}.also {
 			val err = stdErr.toByteArray().toString(Charsets.UTF_8)
-			if (err.isNotBlank()) throw ExecException(err)
+			if (err.isNotBlank()) throw GradleException(err)
 			if (it.exitValue != 0) throw IllegalStateException(
 				"Detected lock file for Sloth loads.\n" +
 				"This may have been thrown if a Sloth load was still in process.\n" +
@@ -64,7 +64,7 @@ abstract class DeploySloth @Inject constructor(private var execOperations: ExecO
 			it.errorOutput = stdErr
 		}.also {
 			val err = stdErr.toByteArray().toString(Charsets.UTF_8)
-			if (it.exitValue != 0) throw ExecException(err)
+			if (it.exitValue != 0) throw GradleException(err)
 		}
 		println("pushed jar")
 
@@ -75,13 +75,13 @@ abstract class DeploySloth @Inject constructor(private var execOperations: ExecO
 				it.commandLine(
 					getAdbExecutable().get().asFile.absolutePath,
 					"shell",
-					"test ! -f ${getDeployLocation().get()}/lock",
+					"test ! -f ${getDeployLocation().get()}/sloth.lock",
 				)
 				it.isIgnoreExitValue = true
 				it.errorOutput = stdErr
 			}.let {
 				val err = stdErr.toByteArray().toString(Charsets.UTF_8)
-				if (err.isNotBlank()) throw ExecException(err)
+				if (err.isNotBlank()) throw GradleException(err)
 				it.exitValue == 0
 			}
 			if (finished) break

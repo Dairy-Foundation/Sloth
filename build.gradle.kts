@@ -18,6 +18,8 @@ ftc {
 	kotlin
 
 	sdk {
+		version = "11.2.1"
+
 		RobotCore
 		FtcCommon {
 			configurationNames += "testImplementation"
