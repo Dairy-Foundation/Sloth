@@ -15,6 +15,8 @@ class Load : Plugin<Project> {
 		val outputDir = project.layout.buildDirectory.dir("libs")
 		val adb = androidComponents.sdkComponents.adb
 
+		val settings = project.extensions.create("load", LoadSettings::class.java)
+
 		val dexSloth = project.tasks.register("dexSloth", DexSloth::class.java) { task ->
 			task.group = "build"
 
@@ -39,6 +41,7 @@ class Load : Plugin<Project> {
 			task.getOutputDir().set(outputDir)
 			task.getBundleBaseName().set(BUNDLE_BASE_NAME_CONVENTION)
 			task.getDeployLocation().set(DEPLOY_LOCATION_CONVENTION)
+			task.getSettings().set(settings)
 
 			task.dependsOn(assembleSloth)
 		}
@@ -48,6 +51,7 @@ class Load : Plugin<Project> {
 
 			task.getAdbExecutable().set(adb)
 			task.getDeployLocation().set(DEPLOY_LOCATION_CONVENTION)
+			task.getSettings().set(settings)
 		}
 
 		project.afterEvaluate {
