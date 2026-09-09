@@ -25,7 +25,6 @@ import java.lang.reflect.Method
 @Preload
 @Pinned
 @FunctionalInterface
-@JvmDefaultWithoutCompatibility
 fun interface OnCreateMenu {
 	val adjacencyRule: AdjacencyRule<OnCreateMenu, Graph<OnCreateMenu>>
 		get() = INDEPENDENT

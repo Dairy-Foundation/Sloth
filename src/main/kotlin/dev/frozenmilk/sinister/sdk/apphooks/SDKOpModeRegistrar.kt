@@ -11,7 +11,7 @@ import dev.frozenmilk.sinister.isPublic
 import dev.frozenmilk.sinister.isStatic
 import dev.frozenmilk.sinister.sdk.opmodes.OpModeScanner
 import dev.frozenmilk.sinister.sdk.opmodes.SinisterRegisteredOpModes
-import dev.frozenmilk.sinister.sdk.opmodes.TeleopAutonomousOpModeScanner
+import dev.frozenmilk.sinister.sdk.opmodes.AnnotatedOpModeScanner
 import dev.frozenmilk.sinister.targeting.WideSearch
 import dev.frozenmilk.sinister.util.log.Logger
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
@@ -86,7 +86,7 @@ object SDKOpModeRegistrar : Scanner {
     private class DynamicAnnotatedOpModeManager(metas: MutableList<OpModeMeta>) : OpModeScanner.RegistrationHelper(metas),
 		AnnotatedOpModeManager {
         override fun register(opModeClass: Class<*>) {
-            val (meta, error) = TeleopAutonomousOpModeScanner.metaForClass(opModeClass) // no meta extractable, we are going to ignore these errors
+            val (meta, error) = AnnotatedOpModeScanner.metaForClass(opModeClass) // no meta extractable, we are going to ignore these errors
             if (error != null) {
 				Logger.e(TAG, "OpMode Configuration Error:\n$error")
 				RobotLog.setGlobalErrorMsg(error)
@@ -98,7 +98,7 @@ object SDKOpModeRegistrar : Scanner {
         }
 
         override fun register(name: String, opModeClass: Class<out OpMode>) {
-            TeleopAutonomousOpModeScanner.checkOpModeClass(opModeClass)?.let {
+            AnnotatedOpModeScanner.checkOpModeClass(opModeClass)?.let {
 				Logger.e(TAG, it)
 				RobotLog.setGlobalErrorMsg(it)
                 return

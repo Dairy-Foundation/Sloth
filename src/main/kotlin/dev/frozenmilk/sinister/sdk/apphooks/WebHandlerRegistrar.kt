@@ -26,7 +26,6 @@ import java.lang.reflect.Method
 @Preload
 @Pinned
 @FunctionalInterface
-@JvmDefaultWithoutCompatibility
 fun interface WebHandlerRegistrar {
 	val adjacencyRule: AdjacencyRule<WebHandlerRegistrar, Graph<WebHandlerRegistrar>>
 		get() = INDEPENDENT

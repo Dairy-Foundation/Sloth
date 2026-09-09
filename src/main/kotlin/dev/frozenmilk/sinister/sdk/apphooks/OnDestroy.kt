@@ -24,7 +24,6 @@ import java.lang.reflect.Method
 @Preload
 @Pinned
 @FunctionalInterface
-@JvmDefaultWithoutCompatibility
 fun interface OnDestroy {
 	val adjacencyRule: AdjacencyRule<OnDestroy, Graph<OnDestroy>>
 		get() = INDEPENDENT

@@ -153,6 +153,7 @@ object ConfigurationTypeScanner : Scanner, OnCreateEventLoop {
 		resetHardwareMap = Runnable {
 			Logger.v(TAG, "Rebuilding HardwareMap...")
 
+			// TODO: this does a bad job of handling xml resources
 			var file: RobotConfigFile = robotConfigFileManager.getActiveConfigAndUpdateUI()
 
 			try {

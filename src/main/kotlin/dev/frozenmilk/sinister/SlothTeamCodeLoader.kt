@@ -1,6 +1,8 @@
 @file:Suppress("DEPRECATION")
+
 package dev.frozenmilk.sinister
 
+import com.qualcomm.robotcore.util.RobotLog
 import dalvik.system.DexFile
 import dev.frozenmilk.sinister.loaders.SlothClassLoader
 import dev.frozenmilk.sinister.loading.LoadEvent
@@ -10,167 +12,194 @@ import dev.frozenmilk.sinister.util.notify.Notifier
 import org.firstinspires.ftc.robotcore.internal.files.RecursiveFileObserver
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
+import java.io.IOException
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 @Preload
 @Suppress("unused")
 object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
-	private val TAG = javaClass.simpleName
-	private val dir = File("${AppUtil.FIRST_FOLDER}/dairy/sloth")
-	private val lock = File("$dir/sloth.lock")
-	private val jarToLoad = File("$dir/to_load.jar")
-	private val loadedJar = File("$dir/loaded.jar")
-	private var loadEvent: LoadEvent<SlothClassLoader>? = null
+    private val TAG = javaClass.simpleName
+    private val dir = File("${AppUtil.FIRST_FOLDER}/dairy/sloth")
+    private val lock = File("$dir/sloth.lock")
+    private var loadEvent: LoadEvent<SlothClassLoader>? = null
+    private var loadedFile: File? = null
 
-	init {
-		ensureFileHierarchy()
-		if (!switchLoader()) {
-			// attempt to cancel,
-			// can only work if event hasn't been released
-			loadEvent?.cancel()
-			//val classes = classes(File(AppUtil.getInstance().application.packageCodePath))
-			val loader = SlothClassLoader(
-				AppUtil.getInstance().application.packageCodePath,
-				"", // TODO
-				SinisterImpl.rootLoader,
-				SinisterImpl.ignoredClasses
-			)
-			Notifier.notify("Staged TeamCode Load")
-			Logger.v(TAG, "Staged TeamCode Load")
-			SinisterImpl.stageLoad(loader, loader.classes) {
-				it.afterCancel {
-					Notifier.notify("Cancelled TeamCode Load")
-					Logger.v(TAG, "Cancelled TeamCode Load")
-				}.beforeRelease { Logger.v(TAG, "Processing TeamCode Load") }.afterRelease {
-					Notifier.notify("Processed TeamCode Load")
-					Logger.v(TAG, "Processed TeamCode Load")
-				}.beforeUnload { Logger.v(TAG, "Unloading TeamCode Load") }.afterUnload {
-					Notifier.notify("Unloaded TeamCode Load")
-					Logger.v(TAG, "Unloaded TeamCode Load")
-				}
-				loadEvent?.let { loadEvent ->
-					it.beforeRelease {
-						// attempt to unload
-						loadEvent.unload()
-					}
-				}
-				loadEvent = it
-			}
-		}
-	}
+    init {
+        ensureFileHierarchy()
+        val fileToLoad = findFileToLoad()
+        if (fileToLoad !== null) {
+            switchLoader(fileToLoad)
+        } else {
+            val loader = SlothClassLoader(
+                AppUtil.getInstance().application.packageCodePath,
+                "", // TODO
+                SinisterImpl.rootLoader,
+                SinisterImpl.ignoredClasses,
+            )
+            Notifier.notify("Staged TeamCode Load")
+            Logger.v(TAG, "Staged TeamCode Load")
+            SinisterImpl.stageLoad(null, loader, loader.classes) { newLoadEvent ->
+                newLoadEvent.afterCancel {
+                    Notifier.notify("Cancelled TeamCode Load")
+                    Logger.v(TAG, "Cancelled TeamCode Load")
+                }
+                newLoadEvent.beforeRelease {
+                    Logger.v(TAG, "Processing TeamCode Load")
+                }
+                newLoadEvent.afterRelease {
+                    Notifier.notify("Processed TeamCode Load")
+                    Logger.v(TAG, "Processed TeamCode Load")
+                }
+                newLoadEvent.beforeUnload {
+                    Logger.v(TAG, "Unloading TeamCode Load")
+                }
+                newLoadEvent.afterUnload {
+                    Notifier.notify("Unloaded TeamCode Load")
+                    Logger.v(TAG, "Unloaded TeamCode Load")
+                }
+                loadEvent = newLoadEvent
+            }
+        }
+    }
 
-	private fun classes() =
-		handleDex {
-			val file = DexFile(loadedJar.absolutePath)
-			val res = file.entries().asSequence().filter {
-				SinisterImpl.teamCodeSearch.determineInclusion(it) && SinisterImpl.rootLoader.pinned(
-					it
-				) == null
-			}.toList()
-			file.close()
-			res
-		}
+    private fun classes(file: File) = handleDex(
+        TimeSource.Monotonic.markNow() + 2.5.seconds,
+        {
+            val file = DexFile(file.absolutePath)
+            try {
+                file.entries().asSequence().filter {
+                    SinisterImpl.teamCodeSearch.determineInclusion(it) //
+                            && SinisterImpl.rootLoader.pinned(it) == null
+                }.toList()
+            } finally {
+                file.close()
+            }
+        },
+        null,
+    )
 
-	private fun switchLoader(): Boolean {
-		if (loadedJar.exists()) {
-			if (loadedJar.isFile) {
-				lock.createNewFile()
-				// attempt to cancel,
-				// can only work if event hasn't been released
-				loadEvent?.cancel()
-				// this loads classes from the loaded jar
-				// it locks down to only teamcode classes
-				// and will not load pinned classes from itself
-				val classes = classes()
+    private inline fun <T> handleDex(timeout: TimeMark, f: () -> T, orElse: T): T {
+        while (timeout.hasNotPassedNow()) {
+            try {
+                return f()
+            } catch (e: IOException) {
+            }
+        }
+        return orElse
+    }
 
-				val loader = handleDex {
-					SlothClassLoader(
-						loadedJar.absolutePath, "", // TODO
-						SinisterImpl.rootLoader, classes
-					).also {
-						if (classes.isNotEmpty()) it.loadClass(classes.first())
-					}
-				}
-				Notifier.notify("Staged Sloth Load")
-				Logger.v(TAG, "Staged Sloth Load")
-				SinisterImpl.stageLoad(loader, loader.classes) {
-					it.afterCancel {
-						Notifier.notify("Cancelled Sloth Load")
-						Logger.v(TAG, "Cancelled Sloth Load")
-					}.beforeRelease { Logger.v(TAG, "Processing Sloth Load") }.afterRelease {
-						Notifier.notify("Processed Sloth Load")
-						Logger.v(TAG, "Processed Sloth Load")
-					}.beforeUnload { Logger.v(TAG, "Unloading Sloth Load") }.afterUnload {
-						Notifier.notify("Unloaded Sloth Load")
-						Logger.v(TAG, "Unloaded Sloth Load")
-					}
-					loadEvent?.let { loadEvent ->
-						it.beforeRelease {
-							// attempt to unload
-							Logger.d(
-								TAG,
-								"Attempting to unload previous Sloth Load, stage: ${loadEvent.stage}"
-							)
-							loadEvent.unload()
-						}
-					}
-					loadEvent = it
-				}
-				lock.delete()
-				return true
-			} else {
-				loadedJar.delete()
-			}
-		}
-		return false
-	}
+    private fun switchLoader(file: File) {
+        lock.createNewFile()
+        // attempt to cancel,
+        // can only work if event hasn't been released
+        val oldLoadEvent = loadEvent?.cancel() ?: loadEvent
+        // this loads classes from the loaded jar
+        // it locks down to only teamcode classes
+        // and will not load pinned classes from itself
+        val classes = checkNotNull(classes(file)) { "Unable to open DexFile $file" }
+        val loader = SlothClassLoader(
+            file.absolutePath,
+            "", // TODO
+            SinisterImpl.rootLoader,
+            classes,
+        )
 
-	private fun ensureFileHierarchy() {
-		if (!dir.exists()) {
-			Logger.d(TAG, "making sloth dir")
-			dir.mkdirs()
-		} else if (!dir.isDirectory) {
-			Logger.d(TAG, "remaking sloth dir")
-			dir.delete()
-			dir.mkdirs()
-		}
-		if (lock.exists()) {
-			Logger.v(TAG, "deleting dead lock.jar")
-			lock.delete()
-		}
-		if (jarToLoad.exists()) {
-			Logger.v(TAG, "deleting dead to_load.jar")
-			jarToLoad.delete()
-		}
-	}
+        Notifier.notify("Staged Sloth Load")
+        Logger.v(TAG, "Staged Sloth Load")
+        SinisterImpl.stageLoad(oldLoadEvent, loader, loader.classes) { newLoadEvent ->
+            newLoadEvent.afterCancel {
+                file.delete()
+                Notifier.notify("Cancelled Sloth Load")
+                Logger.v(TAG, "Cancelled Sloth Load")
+            }
+            newLoadEvent.beforeRelease {
+                Logger.v(TAG, "Processing Sloth Load") //
+            }
+            newLoadEvent.afterRelease {
+                Notifier.notify("Processed Sloth Load")
+                Logger.v(TAG, "Processed Sloth Load")
+            }
+            newLoadEvent.beforeUnload {
+                Logger.v(TAG, "Unloading Sloth Load") //
+            }
+            newLoadEvent.afterUnload {
+                file.delete()
+                Notifier.notify("Unloaded Sloth Load")
+                Logger.v(TAG, "Unloaded Sloth Load")
+            }
+            oldLoadEvent?.let { oldLoadEvent ->
+                newLoadEvent.beforeRelease {
+                    // attempt to unload
+                    Logger.d(
+                        TAG,
+                        "Attempting to unload previous Sloth Load, stage: ${oldLoadEvent.stage}"
+                    )
+                    oldLoadEvent.unload()
+                }
+            }
+            loadEvent = newLoadEvent
+        }
+        loadedFile = file
+        lock.delete()
+    }
 
-	private fun generateFileWatcher() = RecursiveFileObserver(
-		dir,
-		RecursiveFileObserver.CREATE or RecursiveFileObserver.DELETE_SELF or RecursiveFileObserver.MOVE_SELF or RecursiveFileObserver.IN_Q_OVERFLOW,
-		RecursiveFileObserver.Mode.RECURSIVE,
-		this
-	).apply {
-		this.startWatching()
-	}
+    private fun ensureFileHierarchy() {
+        if (!dir.exists()) {
+            Logger.d(TAG, "making sloth dir")
+            dir.mkdirs()
+        } else if (!dir.isDirectory) {
+            Logger.d(TAG, "remaking sloth dir")
+            dir.delete()
+            dir.mkdirs()
+        }
+        if (lock.exists()) {
+            Logger.v(TAG, "deleting dead lock.jar")
+            lock.delete()
+        }
+    }
 
-	private var watcher = generateFileWatcher()
+    private fun findFileToLoad(): File? {
+        val files: Array<out File> =
+            dir.listFiles { it.extension == "jar" }
+                ?: return null
+        files.sortBy { it.lastModified() }
+        for (i in 1..<files.size) files[i].delete()
+        return files.firstOrNull()
+    }
 
-	override fun onEvent(event: Int, file: File) {
-		synchronized(this) {
-			if (event and RecursiveFileObserver.CREATE != 0 && file.isFile && file.name == "to_load.jar") {
-				lock.createNewFile()
-				try {
-					check(jarToLoad.renameTo(loadedJar)) { "Failed to rename to_load.jar to loaded.jar" }
-					switchLoader()
-				} catch (e: Throwable) {
-					Logger.e(TAG, "failed to switch loader", e)
-				} finally {
-					lock.delete()
-				}
-			} else if (event and RecursiveFileObserver.IN_Q_OVERFLOW != 0) {
-				watcher.stopWatching()
-				ensureFileHierarchy()
-				watcher = generateFileWatcher()
-			}
-		}
-	}
+    private fun generateFileWatcher() = RecursiveFileObserver(
+        dir,
+        RecursiveFileObserver.CREATE or RecursiveFileObserver.DELETE_SELF or RecursiveFileObserver.MOVE_SELF or RecursiveFileObserver.IN_Q_OVERFLOW,
+        RecursiveFileObserver.Mode.RECURSIVE,
+        this
+    ).apply {
+        this.startWatching()
+    }
+
+    private var watcher = generateFileWatcher()
+
+    override fun onEvent(event: Int, file: File) {
+        synchronized(this) {
+            if (event and RecursiveFileObserver.CREATE != 0 && file.isFile && file.extension == "jar") {
+                lock.createNewFile()
+                try {
+                    switchLoader(file)
+                } catch (e: Throwable) {
+                    Logger.e(TAG, "failed to switch loader", e)
+                    RobotLog.setGlobalErrorMsg(
+                        "Failed to sloth load\n" +
+                                e.stackTraceToString()
+                    )
+                } finally {
+                    lock.delete()
+                }
+            } else if (event and RecursiveFileObserver.IN_Q_OVERFLOW != 0) {
+                watcher.stopWatching()
+                ensureFileHierarchy()
+                watcher = generateFileWatcher()
+            }
+        }
+    }
 }

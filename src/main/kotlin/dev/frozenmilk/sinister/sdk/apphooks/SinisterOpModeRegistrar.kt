@@ -22,7 +22,6 @@ import dev.frozenmilk.util.graph.rule.dependsOn
 @Preload
 @Pinned
 @FunctionalInterface
-@JvmDefaultWithoutCompatibility
 fun interface SinisterOpModeRegistrar {
     fun registerOpModes(registrationHelper: OpModeScanner.RegistrationHelper)
 }
