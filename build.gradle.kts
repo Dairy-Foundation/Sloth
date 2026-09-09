@@ -1,35 +1,34 @@
 plugins {
-	id("dev.frozenmilk.android-library") version "10.3.0-0.1.4"
-	id("dev.frozenmilk.publish") version "0.0.5"
-	id("dev.frozenmilk.doc") version "0.0.5"
-	id("dev.frozenmilk.build-meta-data") version "0.0.1"
+	id("dev.frozenmilk.android-library") version "11.2.1-1.2.0"
+	id("dev.frozenmilk.publish") version "0.1.0"
+	id("dev.frozenmilk.doc") version "0.1.0"
+	id("dev.frozenmilk.build-meta-data") version "0.1.0"
 }
 
 repositories {
 	maven {
-		name = "dairyReleases"
-		url = uri("https://repo.dairy.foundation/releases")
+		name = "dairySnapshots"
+		url = uri("https://repo.dairy.foundation/snapshots")
 	}
 }
 
 android.namespace = "dev.frozenmilk.sinister"
 
 ftc {
-	kotlin
+	kotlin()
 
 	sdk {
-		RobotCore
-		FtcCommon {
-			configurationNames += "testImplementation"
-		}
-		Hardware
-		OnBotJava
-		Blocks
+		compileOnly(RobotCore)
+		compileOnly(FtcCommon)
+		compileOnly(Hardware)
+		compileOnly(OnBotJava)
+		compileOnly(Blocks)
+		testImplementation(FtcCommon)
 	}
 }
 
 dependencies {
-	api("dev.frozenmilk:Sinister:2.2.0")
+	api("dev.frozenmilk:Sinister:SNAPSHOT-e7d3163")
 }
 
 meta {
