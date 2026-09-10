@@ -17,47 +17,51 @@ loading capabilities on the android FTC platform. This allows Sloth to
 support a wide range of libraries that need to know about and react to hot
 reloading your code.
 
-Sloth has some major improvements over its predecessor, [fastload](https://github.com/MatthewOates36/fast-load):
-1. Sloth is **much faster** than fastload. fastload advertises ~7 seconds
-   upload time; Sloth has a upper ceiling of 2 seconds, but often is less than 1.
+Sloth has some major improvements over its predecessor,
+[fastload](https://github.com/MatthewOates36/fast-load):
+1. Sloth is **much faster** than fastload. fastload advertises ~7 seconds upload
+   time; Sloth has a upper ceiling of 2 seconds, but often is less than 1.
 3. Sloth will **keep changes across restarts and power cycles of the robot**.
 4. Sloth only processes the change in code when your OpMode ends, which means
    **it is safe to deploy with Sloth while running other code**.
-6. `@Pinned` can be put on classes to prevent dynamically changing it, or any subclasses of it.
-7. Sloth is a more capable runtime, that does more than just swap over your code:
+6. `@Pinned` can be put on classes to prevent dynamically changing it, or any
+   subclasses of it.
+7. Sloth is a more capable runtime, that does more than just swap over your
+   code:
     - Sloth sets up [Dairy](https://docs.dairy.foundation/introduction).
-    - Sloth updates parts of the SDK properly when you upload code changes, including
-      your hardwaremap if you're uploading drivers with your teamcode (e.g. the
-      goBILDA Pinpoint driver before it was part of the SDK).
-    - Libraries that rely on looking at your code, like
-      [FTC Dashboard](https://github.com/acmerobotics/ftc-dashboard), can be
-      easily tweaked to be compatible with Sloth, and thus load faster, and
-      support hotreloading. (Please open an issue if you have a favourite library
-      that is currently incompatible with Sloth; I don't mind maintaining a fork,
-      or doing the setup work to make it easy for others to maintain.)
+    - Sloth updates parts of the SDK properly when you upload code changes,
+      including your hardwaremap if you're uploading drivers with your teamcode
+      (e.g. the goBILDA Pinpoint driver before it was part of the SDK).
+    - Libraries that rely on looking at your code, like [FTC
+      Dashboard](https://github.com/acmerobotics/ftc-dashboard), can be easily
+      tweaked to be compatible with Sloth, and thus load faster, and support
+      hotreloading. (Please open an issue if you have a favourite library that
+      is currently incompatible with Sloth; I don't mind maintaining a fork, or
+      doing the setup work to make it easy for others to maintain.)
     - Sloth supports custom user classpath scanning, so you can write your own
       systems that listen and react to hot reloads.
-8. Sloth includes a drop-in replacement of FTC Dashboard that replaces some internal
-   mechanisms of FTC Dashboard to use the Sloth and Sinister equivalents.
-   This fork fully supports hot reloading for Configuration (`@Config`) and OpModes.
+8. Sloth includes a drop-in replacement of FTC Dashboard and Panels that
+   replaces some internal mechanisms of FTC Dashboard / Panels to use the Sloth
+   and Sinister equivalents. This fork fully supports hot reloading for
+   Configuration (`@Config`) and OpModes.
 
 There are some precautions to take when using Sloth:
-1. Sloth will only dynamically hot reload classes in the `org.firsinspires.ftc.teamcode` package (and subpackages).
-2. It is possible to upload code that compiles, but does not work when hot reloaded due to:
+1. Sloth will only dynamically hot reload classes in the
+   `org.firsinspires.ftc.teamcode` package (and subpackages).
+2. It is possible to upload code that compiles, but does not work when hot
+   reloaded due to:
    - Installing or changing libraries.
    - Changing files that are not hot reloaded.
    - Changing `@Pinned` on files.
-   Be careful to ensure that you make changes that will be changed, and if make changes that will not,
-   that you perform a full install in order to propagate them.
-
-> [!WARNING]
-> If you used an older version of the Pedro Pathing quickstart, you will need
-> to move your files to the `org.firstinspires.ftc.teamcode` package.
+   Be careful to ensure that you make changes that will be changed, and if make
+   changes that will not, that you perform a full install in order to propagate
+   them.
 
 # Installation
 
 > [!NOTE]
-> If you are using FTC Dashboard, check out the [FTC Dashboard](#ftc-dashboard) section.
+> If you are using FTC Dashboard, check out the [FTC Dashboard](#ftc-dashboard)
+> section.
 
 > [!NOTE]
 > If you're interested in an easier way to manage your ftc gradle build and
@@ -65,6 +69,10 @@ There are some precautions to take when using Sloth:
 > template for using Sloth with all the work done for you.
 
 ## Dairy Templates
+We maintain some plugins and templates that make setting up FTC projects very
+easy for teams, and makes it easy to keep all your ftc libraries up to date and
+in sync.
+
 Learn more about Dairy's gradle plugins and project templates
 [here](https://github.com/Dairy-Foundation/Templates/)
 
@@ -96,16 +104,17 @@ You do need to install the Load plugin:
 ```kts
 plugins {
     // you should already have this line
-    id("dev.frozenmilk.teamcode") version "11.0.0-1.1.0"
+    id("dev.frozenmilk.teamcode") version "11.2.1-1.2.0"
     // add this line
-    id("dev.frozenmilk.sinister.sloth.load") version "0.2.4"
+    id("dev.frozenmilk.sinister.sloth.load") version "0.3.0"
 }
 ```
 
 Then follow the steps to set up the gradle tasks.
 
 ## Dairy Repositories
-Add the dairy repositories to your `TeamCode` `build.gradle`, above the `dependencies` block:
+Add the dairy repositories to your `TeamCode` `build.gradle`, above the
+`dependencies` block:
 ```groovy
 repositories {
     // Dairy releases repository
@@ -120,20 +129,22 @@ repositories {
 ```
 
 ## Install Sloth
-This is a bit different depending on whether you are using other Dairy libraries or not:
+This is a bit different depending on whether you are using other Dairy libraries
+or not:
 
 ### Sloth Library (if you ARE NOT using other Dairy 1.x.x libraries)
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
+    implementation("dev.frozenmilk.sinister:Sloth:0.3.0")
 }
 ```
 
 Now [install the Load plugin](#load-plugin).
 
 ### Dairy Core (if you ARE using other 1.x.x Dairy libraries)
-To use this release of Sloth with Dairy you need to install a snapshot version of Dairy's Core.
+To use this release of Sloth with Dairy you need to install a snapshot version
+of Dairy's Core.
 
 Add core to the `dependencies` block:
 ```groovy
@@ -143,8 +154,9 @@ dependencies {
 ```
 
 > [!WARNING]
-> You do not need to install Sloth as well, and if you currently have any installations of either
-> `"dev.frozenmilk.dairy:Util"` or `"dev.frozenmilk:Sinister"` then you need to remove those, as this Core
+> You do not need to install Sloth as well, and if you currently have any
+> installations of either `"dev.frozenmilk.dairy:Util"` or
+> `"dev.frozenmilk:Sinister"` then you need to remove those, as this Core
 > version will provide the correct versions of these libraries.
 
 Now [install the Load plugin](#load-plugin).
@@ -160,7 +172,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "dev.frozenmilk:Load:0.2.4"
+        classpath "dev.frozenmilk:Load:0.3.0"
     }
 }
 ```
@@ -178,7 +190,8 @@ Now [add the Gradle tasks](#gradle-tasks).
 NOTE: If you use FTC Dashboard, install that now, then setup the gradle tasks:
 
 ## FTC Dashboard
-Add the dairy releases repository to your `TeamCode` `build.gradle`, above the `dependencies` block (if you already have it, no need to do so again)
+Add the dairy releases repository to your `TeamCode` `build.gradle`, above the
+`dependencies` block (if you already have it, no need to do so again)
 ```groovy
 repositories {
     maven {
@@ -190,14 +203,15 @@ repositories {
 Then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.2.4+0.5.1")
+    implementation("com.acmerobotics.slothboard:dashboard:0.3.0+0.5.1")
 }
 ```
 
 > [!NOTE]
-> If you use a library that imports dashboard via a `implementation` or `api` dependency,
-> ask the library maintainers to consider changing it to `compileOnly`.  This will allow
-> it to work with the modified version of FTC Dashboard that Sloth uses.
+> If you use a library that imports dashboard via a `implementation` or `api`
+> dependency, ask the library maintainers to consider changing it to
+> `compileOnly`.  This will allow it to work with the modified version of FTC
+> Dashboard that Sloth uses.
 
 Change the `implementation` like so:
 ```groovy
@@ -209,10 +223,12 @@ implementation ("com.acmerobotics.roadrunner:actions:1.0.1"){
 }
 ```
 
-_Road Runner version numbers may not be up to date; they are provided only as an example._
+_Road Runner version numbers may not be up to date; they are provided only as an
+example._
 
 ## Panels
-Add the dairy releases repository to your `TeamCode` `build.gradle`, above the `dependencies` block (if you already have it, no need to do so again)
+Add the dairy releases repository to your `TeamCode` `build.gradle`, above the
+`dependencies` block (if you already have it, no need to do so again)
 ```groovy
 repositories {
     maven {
@@ -224,14 +240,14 @@ repositories {
 Then add panels to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.bylazar.sloth:fullpanels:0.2.4+1.0.12")
+    implementation("com.bylazar.sloth:fullpanels:0.3.0+1.0.12")
 }
 ```
 
 > [!NOTE]
 > You can also add all the panels dependencies one-by-one if you want to be
 > selective, which works the same way: `com.bylazar` -> `com.bylazar.sloth` and
-> `<version>` -> `0.2.4+<version>`, you can see all the details at the
+> `<version>` -> `0.3.0+<version>`, you can see all the details at the
 > [dairy repository](https://repo.dairy.foundation/#/releases/com/bylazar/sloth)
 
 > [!NOTE]
@@ -257,7 +273,8 @@ Select gradle:
 Add `deploySloth` and save it:
 
 ![](image/add_deploySloth_task.png)
-NOTE: android studio will not auto complete the names of these tasks, just write it and it will work.
+NOTE: android studio will not auto complete the names of these tasks, just write
+it and it will work.
 
 Edit TeamCode configuration:
 
@@ -280,4 +297,5 @@ Put `removeSlothRemote` first and save:
 
 Run the deploySloth task you just added to deploy the code.
 
-Congratulations!  You are now set up with lightning-fast software deployment using Sloth.
+Congratulations!  You are now set up with lightning-fast software deployment
+using Sloth.

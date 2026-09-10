@@ -5,13 +5,6 @@ plugins {
 	id("dev.frozenmilk.build-meta-data") version "0.1.0"
 }
 
-repositories {
-	maven {
-		name = "dairySnapshots"
-		url = uri("https://repo.dairy.foundation/snapshots")
-	}
-}
-
 android.namespace = "dev.frozenmilk.sinister"
 
 ftc {
@@ -28,7 +21,7 @@ ftc {
 }
 
 dependencies {
-	api("dev.frozenmilk:Sinister:SNAPSHOT-e7d3163")
+	api("dev.frozenmilk:Sinister:2.3.0")
 }
 
 meta {
