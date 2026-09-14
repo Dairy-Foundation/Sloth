@@ -14,7 +14,7 @@ plugins {
 group = "dev.frozenmilk"
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(17)
     compilerOptions {
         freeCompilerArgs.add("-Xreturn-value-checker=full")
         jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)

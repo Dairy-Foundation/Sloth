@@ -45,7 +45,7 @@ object SinisterRegisteredOpModes : RegisteredOpModes() {
         // register our default OpMode first, that way the user can override it (eh?)
         register(
             DEFAULT_OP_MODE_METADATA,
-            OpModeManagerImpl.DefaultOpMode::class.java
+            OpModeManagerImpl.DefaultOpMode::class.java,
         )
         // we also only call this once, the sdk will handle dropping these and replacing them
         callInstanceOpModeRegistrars()

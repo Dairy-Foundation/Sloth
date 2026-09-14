@@ -106,7 +106,7 @@ plugins {
     // you should already have this line
     id("dev.frozenmilk.teamcode") version "11.2.1-1.2.0"
     // add this line
-    id("dev.frozenmilk.sinister.sloth.load") version "0.3.0"
+    id("dev.frozenmilk.sinister.sloth.load") version "0.3.1"
 }
 ```
 
@@ -136,7 +136,7 @@ or not:
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.sinister:Sloth:0.3.0")
+    implementation("dev.frozenmilk.sinister:Sloth:0.3.1")
 }
 ```
 
@@ -172,7 +172,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "dev.frozenmilk:Load:0.3.0"
+        classpath "dev.frozenmilk:Load:0.3.1"
     }
 }
 ```
@@ -203,7 +203,7 @@ repositories {
 Then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.3.0+0.5.1")
+    implementation("com.acmerobotics.slothboard:dashboard:0.3.1+0.6.0")
 }
 ```
 
@@ -240,14 +240,14 @@ repositories {
 Then add panels to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.bylazar.sloth:fullpanels:0.3.0+1.0.12")
+    implementation("com.bylazar.sloth:fullpanels:0.3.1+1.0.13")
 }
 ```
 
 > [!NOTE]
 > You can also add all the panels dependencies one-by-one if you want to be
 > selective, which works the same way: `com.bylazar` -> `com.bylazar.sloth` and
-> `<version>` -> `0.3.0+<version>`, you can see all the details at the
+> `<version>` -> `0.3.1+<version>`, you can see all the details at the
 > [dairy repository](https://repo.dairy.foundation/#/releases/com/bylazar/sloth)
 
 > [!NOTE]

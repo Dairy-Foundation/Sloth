@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
+import dev.frozenmilk.sinister.SlothBuildMetaData
 
 // NOTE: Sinister uses RobotLog instead of Logger, as it won't have been configured yet,
 // and we know we'll be using it in the end unless the user has uploaded an alternate logging system
@@ -47,6 +48,14 @@ object SinisterImpl : Sinister {
     @Suppress("unused")
     fun onCreate(context: Context) {
         synchronized(this) {
+            RobotLog.dd(
+                "Meta",
+                """
+name: ${SlothBuildMetaData.name}
+version: ${SlothBuildMetaData.version}
+ref: ${SlothBuildMetaData.gitRef}
+""",
+            )
             RobotLog.vv(TAG, "attempting boot on create")
             packageCodePath = context.packageCodePath
             if (run) {
@@ -105,26 +114,29 @@ object SinisterImpl : Sinister {
         this.ignoredClasses = teamCodeClasses
 
         // we're going to pre-run the configuration system
+
         try {
             spawnScannerLoad(
                 ConfigurableScanner,
                 rootLoader,
                 rootClasses.iterator(),
-                ThreadPool.getDefault()
+                ThreadPool.getDefault(),
             ).join()
         } catch (e: Throwable) {
-            RobotLog.ee(
-                TAG,
-                e,
-                "Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+            RobotLog.ee(TAG, e, "Failed to run configuration phase")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal configuration error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
             )
+            throw e
         }
 
         val preloaded = preload(rootLoader, rootClasses)
 
         scanners = preloaded
             .flatMap { it.staticInstancesOf(Scanner::class.java) }
-            .filter { it != ConfigurableScanner }
+            .filter { it !== ConfigurableScanner }
             .onEach { RobotLog.vv(TAG, "found scanner ${it.javaClass.simpleName}") }
             .toSet()
 
@@ -133,6 +145,11 @@ object SinisterImpl : Sinister {
             scanLoad(rootLoader, rootClasses)
         } catch (e: Throwable) {
             RobotLog.ee(TAG, e, "Failed to run scanners")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal scanning error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
+            )
             throw e
         }
 
@@ -145,12 +162,18 @@ object SinisterImpl : Sinister {
                 try {
                     if (it.inheritsAnnotation(Preload::class.java)) {
                         RobotLog.vv(TAG, "preloading: ${it.name}")
-                        it.preload(loader)
+                        val _ = it.preload(loader)
                         true
                     } else false
                 } catch (e: Throwable) {
                     RobotLog.ee(TAG, e, "failed to preload ${it.name}")
-                    false
+                    RobotLog.setGlobalErrorMsg(
+                        "Fatal preloading error occurred while running Sloth.\n" +
+                                "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                                "Preloading class $it.\n" +
+                                e.stackTraceToString(),
+                    )
+                    throw e
                 }
             }
 
@@ -183,15 +206,7 @@ object SinisterImpl : Sinister {
                     val tasks = it.map { scanner ->
                         spawnScannerLoad(scanner, loader, classes.iterator(), executor)
                     }.toTypedArray()
-                    try {
-                        CompletableFuture.allOf(*tasks).join()
-                    } catch (e: Throwable) {
-                        RobotLog.ee(
-                            TAG,
-                            e,
-                            "Caught and ignored error while running scanner ${it.javaClass.name}.}"
-                        )
-                    }
+                    CompletableFuture.allOf(*tasks).join()
                 }
                 .clear()
         }
@@ -226,15 +241,7 @@ object SinisterImpl : Sinister {
                     val tasks = it.map { scanner ->
                         spawnScannerUnload(scanner, loader, classes.iterator(), executor)
                     }.toTypedArray()
-                    try {
-                        CompletableFuture.allOf(*tasks).get()
-                    } catch (e: Throwable) {
-                        RobotLog.ee(
-                            TAG,
-                            e,
-                            "Caught and ignored error while running scanner ${it.javaClass.name}."
-                        )
-                    }
+                    CompletableFuture.allOf(*tasks).get()
                 }
                 // clear
                 .clear()
@@ -287,6 +294,7 @@ object SinisterImpl : Sinister {
     }
 
     private fun load(loader: ClassLoader, classNames: List<String>) {
+        // TODO: this is all wrong
         val classes = classNames.mapNotNull {
             if (!rootSearch.determineInclusion(it)) return@mapNotNull null
             try {
@@ -294,8 +302,13 @@ object SinisterImpl : Sinister {
                     if (cls.isPinned()) return@mapNotNull null
                 }
             } catch (e: Throwable) {
-                RobotLog.ee(TAG, "Error occurred while locating class: $e.")
-                null
+                RobotLog.ee(TAG, e, "Error occurred while locating class $it.")
+                RobotLog.setGlobalErrorMsg(
+                    "Fatal class locating error occurred while running Sloth.\n" +
+                            "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                            e.stackTraceToString(),
+                )
+                throw e
             }
         }
 
@@ -305,24 +318,37 @@ object SinisterImpl : Sinister {
                 ConfigurableScanner,
                 loader,
                 classes.iterator(),
-                ThreadPool.getDefault()
+                ThreadPool.getDefault(),
             ).join()
         } catch (e: Throwable) {
-            RobotLog.ee(
-                TAG,
-                e,
-                "Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+            RobotLog.ee(TAG, e, "Failed to run configuration phase")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal configuration error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
             )
+            throw e
         }
 
         // ensure that we enforce the preloading
         repeat(preload(loader, classes).count()) { }
 
         // run scanners
-        scanLoad(loader, classes)
+        try {
+            scanLoad(loader, classes)
+        } catch (e: Throwable) {
+            RobotLog.ee(TAG, e, "Failed to scan load.")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal loading error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
+            )
+            throw e
+        }
     }
 
     private fun unload(loader: ClassLoader, classNames: List<String>) {
+        // TODO: this is also wrong
         val classes = classNames.mapNotNull {
             if (!rootSearch.determineInclusion(it)) return@mapNotNull null
             try {
@@ -330,28 +356,45 @@ object SinisterImpl : Sinister {
                     if (cls.isPinned()) return@mapNotNull null
                 }
             } catch (e: Throwable) {
-                RobotLog.ee(TAG, "Error occurred while locating class: $e.")
-                null
+                RobotLog.ee(TAG, e, "Error occurred while locating class $it.")
+                RobotLog.setGlobalErrorMsg(
+                    "Fatal class locating error occurred while running Sloth.\n" +
+                            "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                            e.stackTraceToString(),
+                )
+                throw e
             }
         }
 
         // run scanners
-        scanUnload(loader, classes)
+        try {
+            scanUnload(loader, classes)
+        } catch (e: Throwable) {
+            RobotLog.ee(TAG, e, "Failed to scan unload.")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal unloading error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
+            )
+            throw e
+        }
 
         // we're going to pre-run the configuration system
         try {
-            spawnScannerLoad(
+            spawnScannerUnload(
                 ConfigurableScanner,
                 loader,
                 classes.iterator(),
-                ThreadPool.getDefault()
+                ThreadPool.getDefault(),
             ).join()
         } catch (e: Throwable) {
-            RobotLog.ee(
-                TAG,
-                e,
-                "Caught and ignored error while running scanner ${ConfigurableScanner.javaClass.name}"
+            RobotLog.ee(TAG, e, "Failed to run configuration phase")
+            RobotLog.setGlobalErrorMsg(
+                "Fatal configuration error occurred while running Sloth.\n" +
+                        "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                        e.stackTraceToString(),
             )
+            throw e
         }
     }
 
@@ -359,27 +402,39 @@ object SinisterImpl : Sinister {
         scanner: Scanner,
         loader: ClassLoader,
         classes: Iterator<Class<*>>,
-        executor: ExecutorService
+        executor: ExecutorService,
     ): CompletableFuture<*> = CompletableFuture.runAsync(
         {
             RobotLog.vv(TAG, "running scanner ${scanner.javaClass.name}")
             // pre scan hook
-            scanner.beforeScan(loader)
+            try {
+                scanner.beforeScan(loader)
+            } catch (err: Throwable) {
+                RobotLog.ee(TAG, err, "$scanner failed before scan")
+                RobotLog.setGlobalErrorMsg(
+                    "Fatal scanning error occurred while running Sloth.\n" +
+                            "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                            "Running scanner $scanner.\n" +
+                            "Before scan\n" +
+                            err.stackTraceToString(),
+                )
+                throw err
+            }
             // scanning classes
             classes.forEach { cls ->
                 if (scanner.targets.determineInclusion(cls.name)) {
                     try {
                         scanner.scan(loader, cls)
-                    }
-                    catch (err: Throwable) {
+                    } catch (err: Throwable) {
                         val ignorableLoadingError =
-                            err is NoClassDefFoundError
-                                    && err.cause is ClassNotFoundException
+                            err is NoClassDefFoundError //
+                                    && err.cause is ClassNotFoundException //
                                     && !teamCodeSearch.determineInclusion(cls.name)
 
                         if (!ignorableLoadingError) {
+                            RobotLog.ee(TAG, err, "$scanner failed to scan $cls")
                             RobotLog.setGlobalErrorMsg(
-                                "Fatal class loading error occurred while running Sloth.\n" +
+                                "Fatal scanning error occurred while running Sloth.\n" +
                                         "Try a regular teamcode install, if this error persists, ask for help.\n" +
                                         "Running scanner $scanner.\n" +
                                         "Scanning class $cls.\n" +
@@ -391,7 +446,19 @@ object SinisterImpl : Sinister {
                 }
             }
             // post scan hook
-            scanner.afterScan(loader)
+            try {
+                scanner.afterScan(loader)
+            } catch (err: Throwable) {
+                RobotLog.ee(TAG, err, "$scanner failed after scan")
+                RobotLog.setGlobalErrorMsg(
+                    "Fatal scanning error occurred while running Sloth.\n" +
+                            "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                            "Running scanner $scanner.\n" +
+                            "After scan\n" +
+                            err.stackTraceToString()
+                )
+                throw err
+            }
             RobotLog.vv(TAG, "finished scanner ${scanner.javaClass.name}")
         },
         executor,
@@ -407,22 +474,58 @@ object SinisterImpl : Sinister {
             {
                 RobotLog.vv(TAG, "running scanner ${scanner.javaClass.name}")
                 // pre unload hook
-                scanner.beforeUnload(loader)
+                try {
+                    scanner.beforeUnload(loader)
+                } catch (err: Throwable) {
+                    RobotLog.ee(TAG, err, "$scanner failed before unload")
+                    RobotLog.setGlobalErrorMsg(
+                        "Fatal scanning error occurred while running Sloth.\n" +
+                                "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                                "Running scanner $scanner.\n" +
+                                "Before unload\n" +
+                                err.stackTraceToString(),
+                    )
+                    throw err
+                }
                 // unloading classes
                 classes.forEach { cls ->
                     if (scanner.targets.determineInclusion(cls.name)) {
                         try {
                             scanner.unload(loader, cls)
                         } catch (err: Throwable) {
-                            RobotLog.ee(
-                                TAG,
-                                "Error occurred while running scanner: ${scanner::class.simpleName} | ${scanner}\nUnloading Class:${cls}\nError: $err\nStackTrace: ${err.stackTraceToString()}"
-                            )
+                            val ignorableLoadingError =
+                                err is NoClassDefFoundError
+                                        && err.cause is ClassNotFoundException
+                                        && !teamCodeSearch.determineInclusion(cls.name)
+
+                            if (!ignorableLoadingError) {
+                                RobotLog.ee(TAG, err, "$scanner failed to unload $cls")
+                                RobotLog.setGlobalErrorMsg(
+                                    "Fatal scanning error occurred while running Sloth.\n" +
+                                            "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                                            "Running scanner $scanner.\n" +
+                                            "Unloading class $cls.\n" +
+                                            err.stackTraceToString()
+                                )
+                                throw err
+                            }
                         }
                     }
                 }
                 // post unload hook
-                scanner.afterUnload(loader)
+                try {
+                    scanner.afterUnload(loader)
+                } catch (err: Throwable) {
+                    RobotLog.ee(TAG, err, "$scanner failed after unload")
+                    RobotLog.setGlobalErrorMsg(
+                        "Fatal scanning error occurred while running Sloth.\n" +
+                                "Try a regular teamcode install, if this error persists, ask for help.\n" +
+                                "Running scanner $scanner.\n" +
+                                "After unload\n" +
+                                err.stackTraceToString()
+                    )
+                    throw err
+                }
                 RobotLog.vv(TAG, "finished scanner ${scanner.javaClass.name}")
             },
             executor,
