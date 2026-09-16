@@ -299,3 +299,31 @@ Run the deploySloth task you just added to deploy the code.
 
 Congratulations!  You are now set up with lightning-fast software deployment
 using Sloth.
+
+## Trouble Shooting
+
+### Removing Remote By Hand
+
+If your robot previously had Sloth and Load set up, but now you only have Sloth
+and have no interest in setting up Load, then you may need to manually remove
+the sloth loaded code from your robot. Not doing this can make it impossible for
+you to upload code to your robot, as the old sloth loaded code keeps replacing
+it.
+
+This is a common issue for teams getting nextv2 or pedro3 in the 2026-2027
+season.
+
+There are two ways to do this:
+
+Graphically, you can go to the device file explorer in android studio while
+connected to it, locate this directory, and delete it:
+
+![](image/remove_remote_manually.png)
+
+Or, you can use an adb shell command to do it from the cli:
+
+```sh
+adb shell rm -rf /storage/emulated/0/FIRST/dairy/sloth/*
+```
+
+Both methods require that you are already conencted to the robot with adb.
