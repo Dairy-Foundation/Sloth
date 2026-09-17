@@ -1,5 +1,5 @@
 plugins {
-	id("dev.frozenmilk.android-library") version "11.2.1-1.2.0"
+	id("dev.frozenmilk.android-library") version "12.0.0-1.2.1"
 	id("dev.frozenmilk.publish") version "0.1.0"
 	id("dev.frozenmilk.doc") version "0.1.0"
 	id("dev.frozenmilk.build-meta-data") version "0.1.0"
