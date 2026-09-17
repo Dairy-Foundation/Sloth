@@ -104,9 +104,9 @@ You do need to install the Load plugin:
 ```kts
 plugins {
     // you should already have this line
-    id("dev.frozenmilk.teamcode") version "11.2.1-1.2.0"
+    id("dev.frozenmilk.teamcode") version "12.0.0-1.2.2"
     // add this line
-    id("dev.frozenmilk.sinister.sloth.load") version "0.3.1"
+    id("dev.frozenmilk.sinister.sloth.load") version "0.3.2"
 }
 ```
 
@@ -121,10 +121,6 @@ repositories {
     maven {
         url = "https://repo.dairy.foundation/releases"
     }
-    // Dairy snapshots repository
-    maven {
-        url = "https://repo.dairy.foundation/snapshots"
-    }
 }
 ```
 
@@ -136,7 +132,7 @@ or not:
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("dev.frozenmilk.sinister:Sloth:0.3.1")
+    implementation("dev.frozenmilk.sinister:Sloth:0.3.2")
 }
 ```
 
@@ -167,12 +163,13 @@ Add this to the top of your `TeamCode` `build.gradle`:
 buildscript {
     repositories {
         mavenCentral()
+        google()
         maven {
             url "https://repo.dairy.foundation/releases"
         }
     }
     dependencies {
-        classpath "dev.frozenmilk:Load:0.3.1"
+        classpath "dev.frozenmilk:Load:0.3.2"
     }
 }
 ```
@@ -203,7 +200,7 @@ repositories {
 Then add dashboard to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.acmerobotics.slothboard:dashboard:0.3.1+0.6.0")
+    implementation("com.acmerobotics.slothboard:dashboard:0.3.2+0.6.0")
 }
 ```
 
@@ -240,14 +237,14 @@ repositories {
 Then add panels to the `dependencies` block:
 ```groovy
 dependencies {
-    implementation("com.bylazar.sloth:fullpanels:0.3.1+1.0.13")
+    implementation("com.bylazar.sloth:fullpanels:0.3.2+1.0.13")
 }
 ```
 
 > [!NOTE]
 > You can also add all the panels dependencies one-by-one if you want to be
 > selective, which works the same way: `com.bylazar` -> `com.bylazar.sloth` and
-> `<version>` -> `0.3.1+<version>`, you can see all the details at the
+> `<version>` -> `0.3.2+<version>`, you can see all the details at the
 > [dairy repository](https://repo.dairy.foundation/#/releases/com/bylazar/sloth)
 
 > [!NOTE]
