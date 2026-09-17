@@ -7,8 +7,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
-import org.gradle.process.ProcessExecutionException
-import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 abstract class RemoveRemoteSloth @Inject constructor(private var execOperations: ExecOperations) :
@@ -24,7 +22,6 @@ abstract class RemoveRemoteSloth @Inject constructor(private var execOperations:
 
     @TaskAction
     fun execute() {
-        val stdErr = ByteArrayOutputStream()
         execOperations.exec {
             it.commandLine(
                 getAdbExecutable().get().asFile.absolutePath,
@@ -32,10 +29,6 @@ abstract class RemoveRemoteSloth @Inject constructor(private var execOperations:
                 "rm -rf ${getDeployLocation().get()}/*"
             )
             it.isIgnoreExitValue = true
-            it.errorOutput = stdErr
-        }.also {
-            val err = stdErr.toByteArray().toString(Charsets.UTF_8)
-            if (it.exitValue != 0) throw ProcessExecutionException(err)
         }
     }
 }

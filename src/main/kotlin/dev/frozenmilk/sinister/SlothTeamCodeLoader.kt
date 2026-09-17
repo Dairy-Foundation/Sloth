@@ -23,6 +23,7 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
     private val TAG = javaClass.simpleName
     private val dir = File("${AppUtil.FIRST_FOLDER}/dairy/sloth")
     private val lock = File("$dir/sloth.lock")
+    private val hash = File("$dir/hash")
     private var loadEvent: LoadEvent<SlothClassLoader>? = null
     private var loadedFile: File? = null
 
@@ -161,12 +162,45 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
     }
 
     private fun findFileToLoad(): File? {
+        val recordedHash = if (hash.exists()) hash.readText()
+        else null
+        if (recordedHash === null) Logger.v(TAG, "no application hash, recording a hash")
+        val appHash = AppUtil.computeMd5(File(AppUtil.getDefContext().packageCodePath))
+        val hashDiscrepancy = recordedHash != appHash
+        if (recordedHash !== null && hashDiscrepancy) Logger.v(TAG, "hash discrepancy, application has changed")
+        if (hashDiscrepancy) hash.writeText(appHash)
+
         val files: Array<out File> =
-            dir.listFiles { it.extension == "jar" }
-                ?: return null
-        files.sortBy { it.lastModified() }
-        for (i in 1..<files.size) files[i].delete()
-        return files.firstOrNull()
+            dir.listFiles { it.extension == "jar" } ?: return null
+
+        return if (hashDiscrepancy) {
+            Logger.v(TAG, "removing old sloth uploads due to application hash change")
+            files.forEach { it.delete() }
+            null
+        }
+        else {
+            files.sortByDescending { it.lastModified() }
+            for (i in 1..<files.size) files[i].delete()
+            val newest = files.firstOrNull()
+
+            val packageInfo = AppUtil.getDefContext().packageManager.getPackageInfo(
+                AppUtil.getDefContext().packageName,
+                0,
+            )
+
+            val epoch = packageInfo.lastUpdateTime
+
+            Logger.v(TAG, "application last update time is $epoch")
+            if (newest !== null && newest.lastModified() > epoch) {
+                Logger.v(TAG, "sloth upload is newer ${newest.lastModified()}, delta: ${newest.lastModified() - epoch}")
+                newest
+            }
+            else {
+                Logger.v(TAG, "removing outdated sloth load")
+                newest?.delete()
+                null
+            }
+        }
     }
 
     private fun generateFileWatcher() = RecursiveFileObserver(
@@ -185,6 +219,7 @@ object SlothTeamCodeLoader : RecursiveFileObserver.Listener {
             if (event and RecursiveFileObserver.CREATE != 0 && file.isFile && file.extension == "jar") {
                 lock.createNewFile()
                 try {
+                    file.setLastModified(System.currentTimeMillis())
                     switchLoader(file)
                 } catch (e: Throwable) {
                     Logger.e(TAG, "failed to switch loader", e)
