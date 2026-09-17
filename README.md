@@ -323,4 +323,4 @@ Or, you can use an adb shell command to do it from the cli:
 adb shell rm -rf /storage/emulated/0/FIRST/dairy/sloth/*
 ```
 
-Both methods require that you are already conencted to the robot with adb.
+Both methods require that you are already connected to the robot with adb.
