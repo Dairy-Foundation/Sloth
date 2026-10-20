@@ -33,7 +33,7 @@ object OnBotJavaLoader {
                         .filter { !it.isDirectory }
                         .map { it.name }
                         .filter { ZipUtils.isClassFile(it) }
-                        .map { it.substring(0, it.length - ".class".length) }
+                        .map { it.substring(0, it.length - ".class".length).replace('/', '.') }
                         .toList().also {
                             file.close()
                         }
