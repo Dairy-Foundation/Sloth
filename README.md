@@ -59,16 +59,33 @@ There are some precautions to take when using Sloth:
 
 # Installation
 
+> [!CAUTION]
+> Make sure to read the installation instructions carefully, do not skim them
+> and guess at what to do. The instructions are precise, and many teams have
+> issues installing Sloth due to misreading the installation instructions.
+
 > [!NOTE]
 > If you are using FTC Dashboard, check out the [FTC Dashboard](#ftc-dashboard)
 > section.
 
 > [!NOTE]
-> If you're interested in an easier way to manage your ftc gradle build and
-> dependencies, check out [Dairy Templates](#dairy-templates), which have a
-> template for using Sloth with all the work done for you.
+> If you are using Panels, the sloth panels patches have now been ported
+> upstream, so install the latest version of panels.
 
-## Dairy Templates
+If you're interested in an easier way to manage your ftc gradle build and
+dependencies, check out [Dairy Templates](#dairy-templates-project), which have
+a template for using Sloth with all the work done for you.
+
+Otherwise, teams using the standard sdk project setup should skip [Dairy
+Templates](#dairy-templates-project) and continue to [Standard
+SDK](#standard-sdk-project).
+
+## Dairy Templates Project
+
+> [!CAUTION]
+> Do not follow these steps unless you are already using a Dairy project
+> template.
+
 We maintain some plugins and templates that make setting up FTC projects very
 easy for teams, and makes it easy to keep all your ftc libraries up to date and
 in sync.
@@ -112,7 +129,12 @@ plugins {
 
 Then follow the steps to set up the gradle tasks.
 
-## Dairy Repositories
+## Standard SDK Project
+
+If you have a standard SDK project, follow the instructions below to add the
+libraries and plugins you will need.
+
+### Dairy Repositories
 Add the dairy repositories to your `TeamCode` `build.gradle`, above the
 `dependencies` block:
 ```groovy
@@ -124,11 +146,7 @@ repositories {
 }
 ```
 
-## Install Sloth
-This is a bit different depending on whether you are using other Dairy libraries
-or not:
-
-### Sloth Library (if you ARE NOT using other Dairy 1.x.x libraries)
+### Sloth Library
 Add sloth to the `dependencies` block:
 ```groovy
 dependencies {
@@ -138,26 +156,7 @@ dependencies {
 
 Now [install the Load plugin](#load-plugin).
 
-### Dairy Core (if you ARE using other 1.x.x Dairy libraries)
-To use this release of Sloth with Dairy you need to install a snapshot version
-of Dairy's Core.
-
-Add core to the `dependencies` block:
-```groovy
-dependencies {
-    implementation("dev.frozenmilk.dairy:Core:2.2.4")
-}
-```
-
-> [!WARNING]
-> You do not need to install Sloth as well, and if you currently have any
-> installations of either `"dev.frozenmilk.dairy:Util"` or
-> `"dev.frozenmilk:Sinister"` then you need to remove those, as this Core
-> version will provide the correct versions of these libraries.
-
-Now [install the Load plugin](#load-plugin).
-
-## Load Plugin
+### Load Plugin
 Add this to the top of your `TeamCode` `build.gradle`:
 ```groovy
 buildscript {
@@ -180,24 +179,19 @@ Add this after the `apply plugin:` lines in the same file:
 apply plugin: 'dev.frozenmilk.sinister.sloth.load'
 ```
 
-Sync and download the code onto your robot via standard install.
+Before you move on, check if you need to swap or update any of your other
+libraries to Sloth versions, like dashboard or panels. Regular versions of
+libraries that have Sloth vesions are not expected to work under Sloth.
+
+Sync and upload the code onto your robot via standard install, not the sloth
+install that you are about to set up.
 
 Now [add the Gradle tasks](#gradle-tasks).
 
-NOTE: If you use FTC Dashboard, install that now, then setup the gradle tasks:
+### FTC Dashboard
 
-## FTC Dashboard
-Add the dairy releases repository to your `TeamCode` `build.gradle`, above the
-`dependencies` block (if you already have it, no need to do so again)
-```groovy
-repositories {
-    maven {
-        url = "https://repo.dairy.foundation/releases"
-    }
-}
-```
-
-Then add dashboard to the `dependencies` block:
+Add slothboard to the `dependencies` block, removing any dependency on the
+original dashboard you had.
 ```groovy
 dependencies {
     implementation("com.acmerobotics.slothboard:dashboard:0.3.2+0.6.0")
@@ -209,6 +203,9 @@ dependencies {
 > dependency, ask the library maintainers to consider changing it to
 > `compileOnly`.  This will allow it to work with the modified version of FTC
 > Dashboard that Sloth uses.
+
+If you use roadrunner, you will need to exclude dashboard so that it does not
+collide with slothboard:
 
 Change the `implementation` like so:
 ```groovy
@@ -223,35 +220,12 @@ implementation ("com.acmerobotics.roadrunner:actions:1.0.1"){
 _Road Runner version numbers may not be up to date; they are provided only as an
 example._
 
-## Panels
-Add the dairy releases repository to your `TeamCode` `build.gradle`, above the
-`dependencies` block (if you already have it, no need to do so again)
-```groovy
-repositories {
-    maven {
-        url = "https://repo.dairy.foundation/releases"
-    }
-}
-```
+### Panels
 
-Then add panels to the `dependencies` block:
-```groovy
-dependencies {
-    implementation("com.bylazar.sloth:fullpanels:0.3.2+1.0.13")
-}
-```
-
-> [!NOTE]
-> You can also add all the panels dependencies one-by-one if you want to be
-> selective, which works the same way: `com.bylazar` -> `com.bylazar.sloth` and
-> `<version>` -> `0.3.2+<version>`, you can see all the details at the
-> [dairy repository](https://repo.dairy.foundation/#/releases/com/bylazar/sloth)
-
-> [!NOTE]
-> If you use a library that imports dashboard via a `implementation` or `api`
-> dependency, ask the library maintainers to consider changing it to
-> `compileOnly`.  This will allow it to work with the modified version of Panels
-> that Sloth uses.
+Panels has now incorporated the changes required to use Sloth into the library
+since fullpanels version 1.0.16, as such, there is no more slothpanels. Old
+publications of slothpanels still exist, and you can find them
+[here](https://repo.dairy.foundation/#/releases/com/bylazar/sloth).
 
 ## Gradle Tasks
 
@@ -297,30 +271,23 @@ Run the deploySloth task you just added to deploy the code.
 Congratulations!  You are now set up with lightning-fast software deployment
 using Sloth.
 
-## Trouble Shooting
+## Trouble Shooting / Known Bugs
 
-### Removing Remote By Hand
+### OnBotJava / External Libraries
 
-If your robot previously had Sloth and Load set up, but now you only have Sloth
-and have no interest in setting up Load, then you may need to manually remove
-the sloth loaded code from your robot. Not doing this can make it impossible for
-you to upload code to your robot, as the old sloth loaded code keeps replacing
-it.
+Version 0.3.2 of Sloth is unable to load OnBotJava files or External Libraries,
+and will crash if there are any, with a warning about being unable to load a
+class. You can fix this by removing all OnBotJava and External Libraries files
+from the Program and Manage page of the control hub.
 
-This is a common issue for teams getting nextv2 or pedro3 in the 2026-2027
-season.
+Sometimes you cannot see all the files in the Program and Manage page, in which
+case you can remove the files via the device file explorer that is available in
+Android Studio while adb connected to the robot.
 
-There are two ways to do this:
-
-Graphically, you can go to the device file explorer in android studio while
-connected to it, locate this directory, and delete it:
-
-![](image/remove_remote_manually.png)
-
-Or, you can use an adb shell command to do it from the cli:
-
-```sh
-adb shell rm -rf /storage/emulated/0/FIRST/dairy/sloth/*
+Remove all files in the following directories:
 ```
-
-Both methods require that you are already connected to the robot with adb.
+/storage/emulated/0/FIRST/ExternalLibraries/
+/storage/emulated/0/FIRST/java/src/
+/storage/emulated/0/FIRST/java/srcBackups/
+/storage/emulated/0/FIRST/java/build/jars/
+```
